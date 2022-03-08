@@ -4,14 +4,12 @@ require_once "loxberry_web.php";
 require_once "defines.php";
 require_once "tesla_inc.php";
 
+$navbar[1]['active'] = True;
+
 // Print LoxBerry header
 $L = LBSystem::readlanguage("language.ini");
-$template_title = "TeslaConnect " . LBSystem::pluginversion();
-//$helplink = "https://www.loxwiki.eu/";
-
 LBWeb::lbheader($template_title, $helplink, $helptemplate);
 
-$lbzeurl ="http://<user>:<pass>@".LBSystem::get_localip()."/admin/plugins/".LBPPLUGINDIR."/tesla_command.php";
 ?>
 
 <style>
@@ -21,10 +19,6 @@ $lbzeurl ="http://<user>:<pass>@".LBSystem::get_localip()."/admin/plugins/".LBPP
         font-weight:bold;
         color:green;
 
-}
-#overlay
-{
-  display: none !important;
 }
 </style>
 
@@ -68,7 +62,6 @@ if (isset($_GET['delete_token'])) {
 
 
 <!-- Queries -->
-
 <?php
 	$vehicles = tesla_summary();
 
@@ -77,54 +70,80 @@ if (isset($_GET['delete_token'])) {
 
 		<div class="wide">Queries</div>
 		<p><i><span class="mono">&lt;user&gt;:&lt;pass&gt; </span>must be replaced with your <b>LoxBerry's</b> username and password.</i></p>
-		<h2>Queries for all vehicles</h2>
-		<div style="display:flex; align-items: center; justify-content: center;">
-			<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
-				<label for="summarylink">summary</label>
-				<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=summary";?>" readonly>
-			</div>
-		</div>
-		<hr>
+		<h2>General queries</h2>
+		
+<?php
+		
+		foreach ($commands as $command => $attribut) {
+			if($attribut->TYPE == "GET"){
+				//Allgemein
+				if (strpos($attribut->URI, '{vehicle_id}') == false) {
+					
+?>
 
+					<div style="display:flex; align-items: center; justify-content: center;">
+						<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
+							<label for="summarylink"><strong><?=strtolower($command)?></strong><br><?= "$attribut->DESC" ?></label>
+							<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=".strtolower($command); ?>" readonly>
+						</div>
+					</div>
+
+<?php
+
+				}
+			}
+		}
+?>
+		<hr>
 <?php
 		// foreach vehicles
 		foreach ($vehicles as $vehicle) {
 			$name = $vehicle->display_name;
 			$vid = strval($vehicle->id);
 			$state = $vehicle->state;
+			$vehicle_id = "&vid=$vid";
 ?>
 
 		<h2>Queries for <?=$name . " (VID: " . $vid . ")\n"; ?></h2>
-		<h3>Get Info</h3>
-		<div style="display:flex; align-items: center; justify-content: center;">
-			<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
-				<label for="summarylink">vehicle_data</label>
-				<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=vehicle_data&vid=$vid";?>" readonly>
-			</div>
-		</div>
-		<div style="display:flex; align-items: center; justify-content: center;">
-			<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
-				<label for="summarylink">wake_up and vehicle_data</label>
-				<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=vehicle_data&vid=$vid&force=true";?>" readonly>
-			</div>
-		</div>
-		<h3>Control</h3>
-
+		<h3>Get informations</h3>
 <?php
-			// foreach vid_actions
-			foreach ($vid_actions as $vid_action) {
+		foreach ($commands as $command => $attribut) {
+			//echo $attribut->TYPE;
+			if($attribut->TYPE == "GET"){
+				//Vehicle GET
+				if (strpos($attribut->URI, '{vehicle_id}') == true) {
 ?>
 
-			<div style="display:flex; align-items: center; justify-content: center;">
-				<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
-					<label for="summarylink"><?="$vid_action" ?></label>
-					<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=$vid_action&vid=$vid";?>" readonly>
-				</div>
-			</div>
+					<div style="display:flex; align-items: center; justify-content: center;">
+						<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
+							<label for="summarylink"><strong><?=strtolower($command)?></strong><br><?= "$attribut->DESC" ?></label>
+							<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=".strtolower($command).$vehicle_id; ?>" readonly>
+						</div>
+					</div>
 
 <?php
-			// foreach vid_actions
+				}
 			}
+		}
+?>
+		<h3>Send commands</h3>
+<?php
+		foreach ($commands as $command => $attribut) {
+			if($attribut->TYPE == "POST"){
+				//Vehicle POST
+				if (strpos($attribut->URI, '{vehicle_id}') == true) {
+?>
+
+					<div style="display:flex; align-items: center; justify-content: center;">
+						<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
+							<label for="summarylink"><strong><?=strtolower($command)?></strong><br><?= "$attribut->DESC" ?></label>
+							<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=".strtolower($command).$vehicle_id; ?>" readonly>
+						</div>
+					</div>
+<?php
+				}
+			}
+		}
 		// foreach vehicles
 		}
 	} else {

@@ -19,8 +19,10 @@ $VID = false;
 $force = false;
 $token = false;
 $action = "noaction";
+### Remove $vid_action, Add actions from json
 $vid_actions = array("wake_up","auto_conditioning_start","auto_conditioning_stop","door_unlock","door_lock","charge_port_door_open","charge_port_door_close","charge_start","charge_stop");
 
+$commands = get_commands();
 $login = tesla_refreshtoken();
 	
 
@@ -49,7 +51,7 @@ function tesla_refreshtoken()
 	$tokenparts = explode(".", $login->bearer_token);
 	$tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
 
-    $timediff = 60*120; //2h 
+    $timediff = 60*240; //60sec*240min (4h) 
 
     print_debug("tesla_refreshtoken: Time now                  - ". time() ." ".gmdate("Y-m-d H:i:s", time()));
 	print_debug("tesla_refreshtoken: Refresh Token valid until - ". ($tokenexpires) ." ".gmdate("Y-m-d H:i:s", $tokenexpires));
@@ -76,7 +78,7 @@ function tesla_summary()
 {
 	// Function to get car summary
 	
-	$data = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL."/vehicles", false )));
+	$data = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURLOLD."/vehicles", false )));
 
 	if(isset($data->response)) {
 		foreach($data->response as $value) {
@@ -92,7 +94,7 @@ function tesla_checktoken()
 {
 	// Function to check if token is valid
 	
-	$data = json_decode(tesla_curl_send( BASEURL."/vehicles", false ));
+	$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles", false ));
 	if (is_null($data)) {
 		return "false";
 	} else {
@@ -108,13 +110,13 @@ function tesla_set ( $VID, $COM )
 	$timeout = 5;
 
 	while($timeout > -1) {
-		$data = json_decode(tesla_curl_send( BASEURL."/vehicles/$VID/$COM", false, true));
+		$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles/$VID/$COM", false, true));
 
 		if (preg_match("/vehicle unavailable/i", $data->error)) {
 			// Wake-Up Car
 			print_debug("tesla_set: vehicle unavailable, wakeup car");
 			
-			$data = json_decode(tesla_curl_send( BASEURL."/vehicles/$VID/wake_up", false, true));
+			$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles/$VID/wake_up", false, true));
 			sleep(2);
 			$timeout = $timeout-1;
 			print_debug("tesla_set: timeout $timeout");
@@ -140,14 +142,14 @@ function tesla_get ( $VID, $COM, $force=false )
 	
 	while($timeout > -1) {
 
-		$data = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL."/vehicles/$VID/$COM", false )));
+		$data = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURLOLD."/vehicles/$VID/$COM", false )));
 	
 		if (!empty($data->error)) {
 			if (preg_match("/vehicle unavailable/i", $data->error) and $force==true) {
 				//Wake-Up Car if force==true
 				print_debug("tesla_get: vehicle unavailable, wakeup car");
 
-				$data = json_decode(tesla_curl_send( BASEURL."/vehicles/$VID/wake_up", false, true));
+				$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles/$VID/wake_up", false, true));
 				sleep(2);
 				$timeout = $timeout-1;
 				print_debug("tesla_get: timeout $timeout");
@@ -172,6 +174,169 @@ function tesla_get ( $VID, $COM, $force=false )
 }
 
 
+###### NEW
+function tesla_query( $VID, $COM, $force=false )
+{
+	// Function to send query to tesla api
+	
+	global $commands;
+	$COM = strtoupper($COM);
+	$type = $commands->{"$COM"}->TYPE;
+	$uri = $commands->{"$COM"}->URI;
+	$uri = str_replace("{vehicle_id}", "$VID", $uri);
+	$timeout = 10;
+
+	while($timeout > -1) {
+		if($type == "GET") {
+			//GET
+			$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$uri, false ));
+			$data = json_decode($rawdata);
+			
+			if (!empty($data->error)) {
+				if (preg_match("/vehicle unavailable/i", $data->error) and $force==true) {
+					//Wake-Up Car if force==true
+					print_debug("tesla_query: $type: vehicle unavailable, wakeup car");
+
+					$wake_up_uri = $commands->{"WAKE_UP"}->URI;
+					$wake_up_uri = str_replace("{vehicle_id}", "$VID", $wake_up_uri);
+					print_debug("tesla_query: $type: $wake_up_uri");
+					$rawdata = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$wake_up_uri, false, true)));
+					$data = json_decode($rawdata);
+					
+					sleep(2);
+					$timeout = $timeout-1;
+					print_debug("tesla_query: $type: timeout $timeout");
+				} elseif (preg_match("/vehicle unavailable/i", $data->error)) {
+					print_debug("tesla_query: $type: vehicle unavailable");
+					break;
+				} elseif (preg_match("/timeout/i", $data->error)) {
+					print_debug("tesla_query: $type: timeout");
+					sleep(1);
+					$timeout = $timeout-1;
+					print_debug("tesla_query: $type: timeout $timeout");
+				}
+			} else {
+				if(isset($data->response)) {
+					$returndata = $data->response;
+					if(isset($returndata->id)){
+						mqttpublish($returndata, "/$returndata->id");
+					} else {
+						foreach($returndata as $value) {
+							mqttpublish($value, "/$value->id");
+						}
+					}
+				}
+				print_debug("tesla_query: $type: success");
+				break;
+			}
+		} else {
+			//POST
+			$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$uri, false, true));
+			$data = json_decode($rawdata);
+			
+			if (!empty($data->error)) {
+				
+				if (preg_match("/vehicle unavailable/i", $data->error)) {
+					// Wake-Up Car
+					print_debug("tesla_query: $type: vehicle unavailable, wakeup car");
+					
+					$wake_up_uri = $commands->{"WAKE_UP"}->URI;
+					$wake_up_uri = str_replace("{vehicle_id}", "$VID", $wake_up_uri);
+					print_debug("tesla_query: $type: $wake_up_uri");
+					$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$wake_up_uri, false, true));
+					$data = json_decode($rawdata);
+					
+					sleep(2);
+					$timeout = $timeout-1;
+					print_debug("tesla_query: $type: timeout $timeout");
+				} elseif (preg_match("/timeout/i", $data->error)) {
+					print_debug("tesla_query: $type: timeout");
+					sleep(1);
+					$timeout = $timeout-1;
+					print_debug("tesla_query: $type: timeout $timeout");
+				} else {
+					print_debug("tesla_query: $type: success");
+					break;
+				}
+			}
+		}
+	}
+	return $rawdata;
+}
+
+
+function get_commands()
+{
+	if( !file_exists(COMMANDFILE) ) {
+		print_debug("Commandfile missing, aborting");
+	} else {
+		print_debug("Read commandfile");
+		$commands = json_decode(file_get_contents(COMMANDFILE));
+
+		//foreach ($commands as $command => $attribut) {
+		//	print_debug("$command - URI:" . $attribut->URI . " - TYPE: " . $attribut->TYPE);
+		//}
+	}
+	return $commands;
+}
+
+function pretty_print($json_data)
+{
+	//Declare the custom function for formatting
+	//Initialize variable for adding space
+	$space = 0;
+	$flag = false;
+
+	//Using <pre> tag to format alignment and font
+	echo "<pre>";
+
+	//loop for iterating the full json data
+	for($counter=0; $counter<strlen($json_data); $counter++)
+	{
+		//Checking ending second and third brackets
+		if ( $json_data[$counter] == '}' || $json_data[$counter] == ']' )
+		{
+			$space--;
+			echo "\n";
+			echo str_repeat(' ', ($space*2));
+		}
+	 
+		//Checking for double quote(“) and comma (,)
+		if ( $json_data[$counter] == '"' && ($json_data[$counter-1] == ',' ||
+			$json_data[$counter-2] == ',') )
+		{
+			echo "\n";
+			echo str_repeat(' ', ($space*2));
+		}
+		
+		if ( $json_data[$counter] == '"' && !$flag )
+		{
+			if ( $json_data[$counter-1] == ':' || $json_data[$counter-2] == ':' )
+			//Add formatting for text
+			echo '<span style="color:blue;font-weight:bold">';
+			else
+			//Add formatting for options
+			echo '<span style="color:red;">';
+		}
+		echo $json_data[$counter];
+		//Checking conditions for adding closing span tag
+		if ( $json_data[$counter] == '"' && $flag )
+		echo '</span>';
+		if ( $json_data[$counter] == '"' )
+		$flag = !$flag;
+
+		//Checking starting second and third brackets
+		if ( $json_data[$counter] == '{' || $json_data[$counter] == '[' )
+			{
+			$space++;
+			echo "\n";
+			echo str_repeat(' ', ($space*2));
+		}
+	}
+	echo "</pre>";
+}
+###### NEW
+
 function mqttpublish($data, $mqttsubtopic="")
 {
 	// Function to send data to mqtt
@@ -193,7 +358,7 @@ function mqttpublish($data, $mqttsubtopic="")
 							foreach ($svalue as $sskey => $ssvalue){
 								if(!empty($ssvalue)){ 
 									$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
-									print_debug("mqttpublish :".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
+									print_debug("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
 								}
 							}
 						} else {
@@ -209,7 +374,7 @@ function mqttpublish($data, $mqttsubtopic="")
 							$value = implode(",", $value);
 						}
 						$mqtt->publish(MQTTTOPIC."/summary$mqttsubtopic/$key", $value, 0, 1);
-						print_debug("mqttpublish :".MQTTTOPIC."/summary$mqttsubtopic/$key: $value"); }
+						print_debug("mqttpublish: ".MQTTTOPIC."/summary$mqttsubtopic/$key: $value"); }
 				}
 			}
 		}

@@ -46,48 +46,17 @@ if(!empty($_GET["force"])) {
 	$force = $_GET["f"];
 }
 
-
-// Actions
-switch ($action)
-{
-	//Get Info
-	case "checktoken";
-		echo tesla_checktoken();
-		break;
-	case "summary";
-		echo json_encode(tesla_summary());
-		break;
-	case "vehicle_data";
-		echo json_encode(tesla_get( $VID, $action, $force ));
-		break;
-		
-	// Control
-	case "wake_up";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "auto_conditioning_start";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "auto_conditioning_stop";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "door_unlock";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "door_lock";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "charge_port_door_open";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "charge_port_door_close";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "charge_start";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
-	case "charge_stop";
-		echo json_encode(tesla_set( $VID, "command/$action" ));
-		break;
+if(isset($commands->{strtoupper($action)})) {
+	if (strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false) {
+		if(!empty($VID)) {
+			echo tesla_query( $VID, $action, $force );
+		} else {
+			echo "VID missing.\n";
+		}
+	} else {
+		echo tesla_query( $VID, $action, $force );
+	}
+} else {
+	echo "Command not found.\n"; 
 }
 ?>
