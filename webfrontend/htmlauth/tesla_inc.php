@@ -91,7 +91,7 @@ function tesla_summary()
 function tesla_checktoken()
 {
 	// Function to check if token is valid
-	$data = tesla_query( "", "product_list" );
+	$data = json_decode(tesla_query( "", "product_list" ));
 
 	if (is_null($data)) {
 		return "false";

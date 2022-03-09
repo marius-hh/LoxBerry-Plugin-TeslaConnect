@@ -44,7 +44,7 @@ PSBIN=$LBPSBIN/$PDIR
 PBIN=$LBPBIN/$PDIR
 
 echo "<INFO> Copy back existing config files"
-cp -f -r /tmp/$PTEMPDIR\_upgrade/config/$PDIR/* $LBHOMEDIR/config/plugins/$PDIR/ 
+cp -f -r /tmp/$PTEMPDIR\_upgrade/config/$PDIR/sessiondata.json $LBHOMEDIR/config/plugins/$PDIR/ 
 chmod 0640 $LBHOMEDIR/config/plugins/$PDIR/sessiondata.json
 
 # Exit with Status 0

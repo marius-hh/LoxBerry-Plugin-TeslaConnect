@@ -50,7 +50,6 @@ mkdir /tmp/$PTEMPDIR\_upgrade
 mkdir /tmp/$PTEMPDIR\_upgrade/config
 
 echo "<INFO> Backing up existing config files"
-rm $PCONFIG/tesla_commands.json
 cp -v -r $PCONFIG/ /tmp/$PTEMPDIR\_upgrade/config
 
 # Exit with Status 0
