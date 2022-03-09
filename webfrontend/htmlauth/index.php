@@ -32,23 +32,22 @@ $tokenparts = explode(".", $login->bearer_token);
 $tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
 
 if($tokenvalid == "true") {
-	?>
+?>
 	
 	<p style="color:green"><b>You are logged in, token is valid until <?=gmdate("Y-m-d H:i:s", $tokenexpires)?> (<a href=?delete_token>delete token</a>).</b></p><br>
 	
-	<?php
+<?php
 } else {
-	?>
+?>
 	
 	<p style="color:red"><b>You are not logged in.</b></p><br>
 	
-	<?php
+<?php
 }
 
 if (isset($_GET['delete_token'])) {
 	delete_token();
 	echo "<script> location.href='index.php'; </script>";
-	//exit();
 } else if(isset($_POST["login"])) {
 	$output = json_decode(login($_POST["weburl"], $_POST["code_verifier"], $_POST["code_challenge"], $_POST["state"]));
 	if($output->success == 0) {
@@ -67,29 +66,22 @@ if (isset($_GET['delete_token'])) {
 
 	if(isset($vehicles)) {
 ?>
-
 		<div class="wide">Queries</div>
 		<p><i><span class="mono">&lt;user&gt;:&lt;pass&gt; </span>must be replaced with your <b>LoxBerry's</b> username and password.</i></p>
-		<h2>General queries</h2>
-		
-<?php
-		
+		<h2>General queries</h2>		
+<?php	
 		foreach ($commands as $command => $attribut) {
 			if($attribut->TYPE == "GET"){
 				//Allgemein
-				if (strpos($attribut->URI, '{vehicle_id}') == false) {
-					
+				if (strpos($attribut->URI, '{vehicle_id}') == false) {				
 ?>
-
 					<div style="display:flex; align-items: center; justify-content: center;">
 						<div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
 							<label for="summarylink"><strong><?=strtolower($command)?></strong><br><?= "$attribut->DESC" ?></label>
 							<input type="text" id="summarylink" name="summarylink" data-mini="true" value="<?=$lbzeurl."?action=".strtolower($command); ?>" readonly>
 						</div>
 					</div>
-
 <?php
-
 				}
 			}
 		}
@@ -103,12 +95,12 @@ if (isset($_GET['delete_token'])) {
 			$state = $vehicle->state;
 			$vehicle_id = "&vid=$vid";
 ?>
-
 		<h2>Queries for <?=$name . " (VID: " . $vid . ")\n"; ?></h2>
 		<h3>Get informations</h3>
+		<p><i>If you add the parameter <span class="mono">&force=true</span>, the vehicle will be woken up if the request is not possible.</i></p>
 <?php
 		foreach ($commands as $command => $attribut) {
-			//echo $attribut->TYPE;
+
 			if($attribut->TYPE == "GET"){
 				//Vehicle GET
 				if (strpos($attribut->URI, '{vehicle_id}') == true) {
@@ -178,7 +170,6 @@ if (isset($_GET['delete_token'])) {
 	}
 }
 ?>	
-
 
 <!-- MQTT -->
 <div class="wide">MQTT</div>

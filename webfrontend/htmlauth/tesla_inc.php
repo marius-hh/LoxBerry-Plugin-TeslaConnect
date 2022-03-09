@@ -6,6 +6,7 @@ include_once "loxberry_io.php";
 require_once "defines.php";
 require_once "phpMQTT/phpMQTT.php";
 
+// Tesla API
 $tesla_api_oauth2 = 'https://auth.tesla.com/oauth2/v3';
 $tesla_api_redirect = 'https://auth.tesla.com/void/callback';
 $tesla_api_owners = 'https://owner-api.teslamotors.com/oauth/token';
@@ -19,8 +20,6 @@ $VID = false;
 $force = false;
 $token = false;
 $action = "noaction";
-### Remove $vid_action, Add actions from json
-$vid_actions = array("wake_up","auto_conditioning_start","auto_conditioning_stop","door_unlock","door_lock","charge_port_door_open","charge_port_door_close","charge_start","charge_stop");
 
 $commands = get_commands();
 $login = tesla_refreshtoken();
@@ -77,8 +76,7 @@ function tesla_refreshtoken()
 function tesla_summary()
 {
 	// Function to get car summary
-	
-	$data = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURLOLD."/vehicles", false )));
+	$data = json_decode(tesla_query( "", "product_list" ));
 
 	if(isset($data->response)) {
 		foreach($data->response as $value) {
@@ -93,8 +91,8 @@ function tesla_summary()
 function tesla_checktoken()
 {
 	// Function to check if token is valid
-	
-	$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles", false ));
+	$data = tesla_query( "", "product_list" );
+
 	if (is_null($data)) {
 		return "false";
 	} else {
@@ -103,78 +101,6 @@ function tesla_checktoken()
 } 
 
 
-function tesla_set ( $VID, $COM )
-{
-	// Function to control car
-	
-	$timeout = 5;
-
-	while($timeout > -1) {
-		$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles/$VID/$COM", false, true));
-
-		if (preg_match("/vehicle unavailable/i", $data->error)) {
-			// Wake-Up Car
-			print_debug("tesla_set: vehicle unavailable, wakeup car");
-			
-			$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles/$VID/wake_up", false, true));
-			sleep(2);
-			$timeout = $timeout-1;
-			print_debug("tesla_set: timeout $timeout");
-		} elseif (preg_match("/timeout/i", $data->error)) {
-			print_debug("tesla_set: timeout");
-			sleep(1);
-			$timeout = $timeout-1;
-			print_debug("tesla_set: timeout $timeout");
-		} else {
-			print_debug("tesla_set: success");
-			break;
-		}
-	}
-	return $data;
-} 
-
-
-function tesla_get ( $VID, $COM, $force=false )
-{
-	// Function to get car info
-	
-	$timeout = 10;
-	
-	while($timeout > -1) {
-
-		$data = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURLOLD."/vehicles/$VID/$COM", false )));
-	
-		if (!empty($data->error)) {
-			if (preg_match("/vehicle unavailable/i", $data->error) and $force==true) {
-				//Wake-Up Car if force==true
-				print_debug("tesla_get: vehicle unavailable, wakeup car");
-
-				$data = json_decode(tesla_curl_send( BASEURLOLD."/vehicles/$VID/wake_up", false, true));
-				sleep(2);
-				$timeout = $timeout-1;
-				print_debug("tesla_get: timeout $timeout");
-			} elseif (preg_match("/vehicle unavailable/i", $data->error)) {
-				print_debug("tesla_get: vehicle unavailable");
-				break;
-			} elseif (preg_match("/timeout/i", $data->error)) {
-				print_debug("tesla_get: timeout");
-				sleep(1);
-				$timeout = $timeout-1;
-				print_debug("tesla_get: timeout $timeout");
-			}
-		} else {
-			$returndata = $data->response;
-			mqttpublish($returndata, "/$returndata->id");
-			print_debug("tesla_get: success");
-			break;
-		}
-	}
-
-	return $data;
-}
-
-
-###### NEW
 function tesla_query( $VID, $COM, $force=false )
 {
 	// Function to send query to tesla api
@@ -267,18 +193,17 @@ function tesla_query( $VID, $COM, $force=false )
 
 function get_commands()
 {
+	// Get Commands from file
+
 	if( !file_exists(COMMANDFILE) ) {
 		print_debug("Commandfile missing, aborting");
 	} else {
 		print_debug("Read commandfile");
 		$commands = json_decode(file_get_contents(COMMANDFILE));
-
-		//foreach ($commands as $command => $attribut) {
-		//	print_debug("$command - URI:" . $attribut->URI . " - TYPE: " . $attribut->TYPE);
-		//}
 	}
 	return $commands;
 }
+
 
 function pretty_print($json_data)
 {
@@ -335,7 +260,7 @@ function pretty_print($json_data)
 	}
 	echo "</pre>";
 }
-###### NEW
+
 
 function mqttpublish($data, $mqttsubtopic="")
 {

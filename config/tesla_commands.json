@@ -1,110 +1,116 @@
 {
-  "STATUS": {
-    "TYPE": "GET",
-    "URI": "status",
-    "AUTH": false,
-	"DESC": "Status of the Tesla API."
-  },
-  "PRODUCT_LIST": {
-    "TYPE": "GET",
-    "URI": "api/1/products",
-    "AUTH": true,
-	"DESC": "List of all products with a summary information."
-  },
-  "TESLA_SUMMARY": {
-    "TYPE": "GET",
-    "URI": "api/1/vehicles",
-    "AUTH": true,
-	"DESC": "List of all vehicles with a summary information."
-  },
-  "VEHICLES": {
-    "TYPE": "GET",
-    "URI": "api/1/vehicles",
-    "AUTH": true,
-	"DESC": "List of all vehicles with a summary information."
-  },
-  "VEHICLE_SUMMARY": {
-    "TYPE": "GET",
-    "URI": "api/1/vehicles/{vehicle_id}",
-    "AUTH": true,
-	"DESC": "Summary information of the vehicle."
-  },
-  "VEHICLE_DATA": {
-    "TYPE": "GET",
-    "URI": "api/1/vehicles/{vehicle_id}/vehicle_data",
-    "AUTH": true,
-	"DESC": "All information and states of the vehicle."
-  },
-  "WAKE_UP": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/wake_up",
-    "AUTH": true,
-	"DESC": "Wakes up the vehicle from a sleeping state."
-  },
-  "DOOR_UNLOCK": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/door_unlock",
-    "AUTH": true,
-	"DESC": "Unlocks the doors to the vehicle."
-  },
-  "DOOR_LOCK": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/door_lock",
-    "AUTH": true,
-	"DESC": "Locks the doors to the vehicle."
-  },
-  "HONK_HORN": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/honk_horn",
-    "AUTH": true,
-	"DESC": "Honks the horn of the vehicle once."
-  },
-  "FLASH_LIGHTS": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/flash_lights",
-    "AUTH": true,
-	"DESC": "Flashes the headlights once."
-  },
-  "AUTO_CONDITIONING_START": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/auto_conditioning_start",
-    "AUTH": true,
-	"DESC": "Start the climate control (HVAC) system. Will cool or heat automatically, depending on set temperature."
-  },
-  "AUTO_CONDITIONING_STOP": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/auto_conditioning_stop",
-    "AUTH": true,
-	"DESC": "Stop the climate control (HVAC) system."
-  },
-  "SET_PRECONDITIONING_MAX": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/set_preconditioning_max",
-    "AUTH": true,
-	"DESC": "Toggles the climate controls between Max Defrost and the previous setting."
-  },
-  "CHARGE_PORT_DOOR_OPEN": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/charge_port_door_open",
-    "AUTH": true,
-	"DESC": "Opens the charge port or unlocks the cable."
-  },
-  "CHARGE_PORT_DOOR_CLOSE": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/charge_port_door_close",
-    "AUTH": true,
-	"DESC": "Closes the charge port."
-  },
-  "CHARGE_START": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/charge_start",
-    "AUTH": true,
-	"DESC": "If the car is plugged in but not currently charging, this will start it charging."
-  },
-  "CHARGE_STOP": {
-    "TYPE": "POST",
-    "URI": "api/1/vehicles/{vehicle_id}/command/charge_stop",
-    "AUTH": true,
-	"DESC": "If the car is currently charging, this will stop it."
-  }
+    "STATUS": {
+        "TYPE": "GET",
+        "URI": "status",
+        "AUTH": false,
+        "DESC": "Status of the Tesla API."
+    },
+    "PRODUCT_LIST": {
+        "TYPE": "GET",
+        "URI": "api/1/products",
+        "AUTH": true,
+        "DESC": "Returns all products including vehicles, powerwalls, and energy sites."
+    },
+    "TESLA_SUMMARY": {
+        "TYPE": "GET",
+        "URI": "api/1/vehicles",
+        "AUTH": true,
+        "DESC": "Returns a list of all vehicle registered for the authenticated user."
+    },
+    "VEHICLES": {
+        "TYPE": "GET",
+        "URI": "api/1/vehicles",
+        "AUTH": true,
+        "DESC": "Returns a list of all vehicle registered for the authenticated user."
+    },
+    "VEHICLE_SUMMARY": {
+        "TYPE": "GET",
+        "URI": "api/1/vehicles/{vehicle_id}",
+        "AUTH": true,
+        "DESC": "Summary information of the vehicle."
+    },
+    "VEHICLE_DATA": {
+        "TYPE": "GET",
+        "URI": "api/1/vehicles/{vehicle_id}/vehicle_data",
+        "AUTH": true,
+        "DESC": "All information and states of the vehicle."
+    },
+    "WAKE_UP": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/wake_up",
+        "AUTH": true,
+        "DESC": "Wakes up the vehicle from a sleeping state."
+    },
+    "REMOTE_START_DRIVE": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/remote_start_drive",
+        "AUTH": true,
+        "DESC": "Enables keyless driving. There is a two minute window after issuing the command to start driving the car."
+    },
+    "DOOR_UNLOCK": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/door_unlock",
+        "AUTH": true,
+        "DESC": "Unlocks the doors to the vehicle."
+    },
+    "DOOR_LOCK": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/door_lock",
+        "AUTH": true,
+        "DESC": "Locks the doors to the vehicle."
+    },
+    "HONK_HORN": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/honk_horn",
+        "AUTH": true,
+        "DESC": "Honks the horn of the vehicle once."
+    },
+    "FLASH_LIGHTS": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/flash_lights",
+        "AUTH": true,
+        "DESC": "Flashes the headlights once."
+    },
+    "AUTO_CONDITIONING_START": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/auto_conditioning_start",
+        "AUTH": true,
+        "DESC": "Start the climate control (HVAC) system. Will cool or heat automatically, depending on set temperature."
+    },
+    "AUTO_CONDITIONING_STOP": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/auto_conditioning_stop",
+        "AUTH": true,
+        "DESC": "Stop the climate control (HVAC) system."
+    },
+    "SET_PRECONDITIONING_MAX": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_preconditioning_max",
+        "AUTH": true,
+        "DESC": "Toggles the climate controls between Max Defrost and the previous setting."
+    },
+    "CHARGE_PORT_DOOR_OPEN": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/charge_port_door_open",
+        "AUTH": true,
+        "DESC": "Opens the charge port or unlocks the cable."
+    },
+    "CHARGE_PORT_DOOR_CLOSE": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/charge_port_door_close",
+        "AUTH": true,
+        "DESC": "Closes the charge port."
+    },
+    "CHARGE_START": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/charge_start",
+        "AUTH": true,
+        "DESC": "If the car is plugged in but not currently charging, this will start it charging."
+    },
+    "CHARGE_STOP": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/charge_stop",
+        "AUTH": true,
+        "DESC": "If the car is currently charging, this will stop it."
+    }
 }

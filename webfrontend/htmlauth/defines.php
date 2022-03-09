@@ -1,6 +1,5 @@
 <?php
 
-define ("BASEURLOLD", "https://owner-api.teslamotors.com/api/1");
 define ("BASEURL", "https://owner-api.teslamotors.com/");
 define ("LOGINFILE", "$lbpconfigdir/sessiondata.json");
 define ("COMMANDFILE", "$lbpconfigdir/tesla_commands.json");
