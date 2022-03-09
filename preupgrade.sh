@@ -50,7 +50,7 @@ mkdir /tmp/$PTEMPDIR\_upgrade
 mkdir /tmp/$PTEMPDIR\_upgrade/config
 
 echo "<INFO> Backing up existing config files"
-cp -v -r $PCONFIG/ /tmp/$PTEMPDIR\_upgrade/config
+cp -v -r $PCONFIG/sessiondata.json /tmp/$PTEMPDIR\_upgrade/config
 
 # Exit with Status 0
 exit 0
