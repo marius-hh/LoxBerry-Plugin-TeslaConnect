@@ -11,12 +11,6 @@
         "AUTH": true,
         "DESC": "Returns all products including vehicles, powerwalls, and energy sites."
     },
-    "TESLA_SUMMARY": {
-        "TYPE": "GET",
-        "URI": "api/1/vehicles",
-        "AUTH": true,
-        "DESC": "Returns a list of all vehicle registered for the authenticated user."
-    },
     "VEHICLES": {
         "TYPE": "GET",
         "URI": "api/1/vehicles",
