@@ -19,7 +19,7 @@ function shutdown()
 	}
 }
 
-$log = LBLog::newLog( [ "name" => "TeslaConnect", "loglevel"=> 7 ] );
+$log = LBLog::newLog( [ "name" => "TeslaConnect", "stderr" => 1 ] );
 LOGSTART("Start Logging");
 
 // Tesla API
@@ -50,18 +50,18 @@ function tesla_refreshtoken()
 	global $token;
 	
 	if( !file_exists(LOGINFILE) ) {
-		print_debug("tesla_refreshtoken: Loginfile missing, aborting");
+		
 		LOGERR("tesla_refreshtoken: Loginfile missing, aborting");
 		return;
 	}
-	print_debug("tesla_refreshtoken: read loginfile");
+	
 	LOGINF("tesla_refreshtoken: read loginfile");
 	$logindata = file_get_contents(LOGINFILE);
 	$login = json_decode($logindata);
 	
 	// Read token
 	if( empty($login->bearer_token) ) {
-		print_debug("tesla_refreshtoken: File data error, no token found. Fallback to re-login");
+		
 		LOGERR("tesla_refreshtoken: File data error, no token found. Fallback to re-login");
 		return;
 	}
@@ -72,9 +72,6 @@ function tesla_refreshtoken()
 
     $timediff = 60*240; //60sec*240min (4h) 
 
-    print_debug("tesla_refreshtoken: Time now                  - ". time() ." ".gmdate("Y-m-d H:i:s", time()));
-	print_debug("tesla_refreshtoken: Refresh Token valid until - ". ($tokenexpires) ." ".gmdate("Y-m-d H:i:s", $tokenexpires));
-    print_debug("tesla_refreshtoken: Time to Refresh Token     - ". ($tokenexpires-$timediff) ." ".gmdate("Y-m-d H:i:s", $tokenexpires-$timediff));
 
 	LOGDEB("tesla_refreshtoken: Time now                  - ". time() ." ".gmdate("Y-m-d H:i:s", time()));
 	LOGDEB("tesla_refreshtoken: Refresh Token valid until - ". ($tokenexpires) ." ".gmdate("Y-m-d H:i:s", $tokenexpires));
@@ -82,17 +79,15 @@ function tesla_refreshtoken()
 	
 	if( $tokenexpires-$timediff > time() ) {
 		// Token is valid
+		LOGOK("tesla_refreshtoken: Token valid");
 		$token = $login->bearer_token;
 	} elseif ($tokenexpires > time()) {
 		// Token expired
-		print_debug("tesla_refreshtoken: Token expired (" . gmdate("Y-m-d\TH:i:s\Z", $tokenexpires) . ")");
 		LOGERR("tesla_refreshtoken: Token expired (" . gmdate("Y-m-d\TH:i:s\Z", $tokenexpires) . ")");
 
 		$token = tesla_oauth2_refresh_token( $login->bearer_refresh_token );
-		print_debug("tesla_refreshtoken: New bearer_token: $token");
 	} else {
 		// no valid token
-		print_debug("tesla_refreshtoken: No valid token, please login.");
 		LOGERR("tesla_refreshtoken: No valid token, please login.");
 	}
 	return $login;
@@ -102,6 +97,7 @@ function tesla_refreshtoken()
 function tesla_summary()
 {
 	// Function to get car summary
+	LOGINF("tesla_summary");
 	$data = json_decode(tesla_query( "", "product_list" ));
 
 	if(isset($data->response)) {
@@ -117,11 +113,14 @@ function tesla_summary()
 function tesla_checktoken()
 {
 	// Function to check if token is valid
+	LOGINF("tesla_checktoken");
 	$data = json_decode(tesla_query( "", "product_list" ));
 
 	if (is_null($data)) {
+		LOGERR("tesla_checktoken: not valid");
 		return "false";
 	} else {
+		LOGOK("tesla_checktoken: valid");
 		return "true";
 	}
 } 
@@ -147,30 +146,24 @@ function tesla_query( $VID, $COM, $force=false )
 			if (!empty($data->error)) {
 				if (preg_match("/vehicle unavailable/i", $data->error) and $force==true) {
 					//Wake-Up Car if force==true
-					print_debug("tesla_query: $type: vehicle unavailable, wakeup car");
 					LOGINFO("tesla_query: $type: vehicle unavailable, wakeup car");
 
 					$wake_up_uri = $commands->{"WAKE_UP"}->URI;
 					$wake_up_uri = str_replace("{vehicle_id}", "$VID", $wake_up_uri);
-					print_debug("tesla_query: $type: $wake_up_uri");
 					LOGDEB("tesla_query: $type: $wake_up_uri");
 					$rawdata = json_decode(preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$wake_up_uri, false, true)));
 					$data = json_decode($rawdata);
 					
 					sleep(2);
 					$timeout = $timeout-1;
-					print_debug("tesla_query: $type: timeout $timeout");
 					LOGERR("tesla_query: $type: timeout $timeout");
 				} elseif (preg_match("/vehicle unavailable/i", $data->error)) {
-					print_debug("tesla_query: $type: vehicle unavailable");
 					LOGERR("tesla_query: $type: vehicle unavailable");
 					break;
 				} elseif (preg_match("/timeout/i", $data->error)) {
-					print_debug("tesla_query: $type: timeout");
 					LOGDEB("tesla_query: $type: timeout");
 					sleep(1);
 					$timeout = $timeout-1;
-					print_debug("tesla_query: $type: timeout $timeout");
 					LOGDEB("tesla_query: $type: timeout $timeout");
 				}
 			} else {
@@ -184,7 +177,6 @@ function tesla_query( $VID, $COM, $force=false )
 						}
 					}
 				}
-				print_debug("tesla_query: $type $COM: success");
 				LOGOK("tesla_query: $type $COM: success");
 				break;
 			}
@@ -197,29 +189,23 @@ function tesla_query( $VID, $COM, $force=false )
 				
 				if (preg_match("/vehicle unavailable/i", $data->error)) {
 					// Wake-Up Car
-					print_debug("tesla_query: $type: vehicle unavailable, wakeup car");
 					LOGERR("tesla_query: $type: vehicle unavailable, wakeup car");
 					
 					$wake_up_uri = $commands->{"WAKE_UP"}->URI;
 					$wake_up_uri = str_replace("{vehicle_id}", "$VID", $wake_up_uri);
-					print_debug("tesla_query: $type: $wake_up_uri");
 					LOGDEB("tesla_query: $type: $wake_up_uri");
 					$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$wake_up_uri, false, true));
 					$data = json_decode($rawdata);
 					
 					sleep(2);
 					$timeout = $timeout-1;
-					print_debug("tesla_query: $type: timeout $timeout");
 					LOGDEB("tesla_query: $type: timeout $timeout");
 				} elseif (preg_match("/timeout/i", $data->error)) {
-					print_debug("tesla_query: $type: timeout");
 					LOGDEB("tesla_query: $type: timeout");
 					sleep(1);
 					$timeout = $timeout-1;
-					print_debug("tesla_query: $type: timeout $timeout");
 					LOGDEB("tesla_query: $type: timeout $timeout");
 				} else {
-					print_debug("tesla_query: $type: success");
 					LOGOK("tesla_query: $type: success");
 					break;
 				}
@@ -235,10 +221,8 @@ function get_commands()
 	// Get Commands from file
 
 	if( !file_exists(COMMANDFILE) ) {
-		print_debug("get_commands: Commandfile missing, aborting");
 		LOGERR("get_commands: Commandfile missing, aborting");
 	} else {
-		print_debug("get_commands: Read commandfile");
 		LOGOK("get_commands: Read commandfile");
 		$commands = json_decode(file_get_contents(COMMANDFILE));
 	}
@@ -315,7 +299,7 @@ function mqttpublish($data, $mqttsubtopic="")
 	$mqtt = new Bluerhinos\phpMQTT($creds['brokerhost'],  $creds['brokerport'], $client_id);
 
     if( $mqtt->connect(true, NULL, $creds['brokeruser'], $creds['brokerpass'] ) ) {
-		LOGOK("MQTT connection successful");
+		LOGOK("mqttpublish: MQTT connection successful");
 
 		if(is_object($data)){
 			foreach ($data as $key => $value) {
@@ -325,14 +309,12 @@ function mqttpublish($data, $mqttsubtopic="")
 							foreach ($svalue as $sskey => $ssvalue){
 								if(!empty($ssvalue)){ 
 									$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
-									print_debug("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
 									LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
 								}
 							}
 						} else {
 							if(!empty($svalue)){ 
 								$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey", $svalue, 0, 1);
-								print_debug("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey: $svalue"); 
 								LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey: $svalue");
 							}
 						}
@@ -343,7 +325,6 @@ function mqttpublish($data, $mqttsubtopic="")
 							$value = implode(",", $value);
 						}
 						$mqtt->publish(MQTTTOPIC."/summary$mqttsubtopic/$key", $value, 0, 1);
-						print_debug("mqttpublish: ".MQTTTOPIC."/summary$mqttsubtopic/$key: $value"); 
 						LOGDEB("mqttpublish: ".MQTTTOPIC."/summary$mqttsubtopic/$key: $value");
 					}
 				}
@@ -351,7 +332,6 @@ function mqttpublish($data, $mqttsubtopic="")
 		}
         $mqtt->close();
     } else {
-        print_debug("mqttpublish: MQTT connection failed");
 		LOGERR("mqttpublish: MQTT connection failed");
     }
 }
@@ -373,8 +353,7 @@ function tesla_curl_send( $url, $payload, $post=false )
 	$header = [ ];
 	
 	if( !empty($token) ) {
-		print_debug("tesla_curl_send: Token given.");
-		LOGOK("tesla_curl_send: Token given.");
+		LOGDEB("tesla_curl_send: Token given");
 		array_push( $header, "Authorization: Bearer $token" );
 	}
 	
@@ -389,14 +368,11 @@ function tesla_curl_send( $url, $payload, $post=false )
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 	curl_setopt($curl, CURLOPT_HTTPHEADER, $header );
 
-	print_debug("tesla_curl_send: curl_send URL: $url");
-	LOGINF("tesla_curl_send: curl_send URL: $url");
+	LOGDEB("tesla_curl_send: curl_send URL: $url");
 	$response = curl_exec($curl);
-	print_debug("tesla_curl_send: curl_exec finished");
-	LOGINF("tesla_curl_send: curl_exec finished");
+	LOGDEB("tesla_curl_send: curl_exec finished");
 	// Debugging
 	$crlinf = curl_getinfo($curl);
-	print_debug("tesla_curl_send: Status: " . $crlinf['http_code']);
 	LOGDEB("tesla_curl_send: Status: " . $crlinf['http_code']);
 	
 	return $response;
@@ -407,20 +383,9 @@ function delete_token()
 {
 	// delete file with token
 	unlink(LOGINFILE);
-	print_debug("delete_token: File " . LOGINFILE . "deleted");
 	LOGINF("delete_token: File " . LOGINFILE . "deleted");
 }
 
-
-function print_debug( $message, $file="" )
-{
-	// Function to print debug messages to commandline
-	global $debugscript;
-	if ($debugscript) {
-		if(!empty($file)) { $file="$file "; }
-		error_log("DEBUG $file- $message");
-	}
-}
 
 ####################################################
 # Tesla Authorization fuctions
