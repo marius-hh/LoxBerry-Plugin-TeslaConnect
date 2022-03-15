@@ -19,3 +19,7 @@ $navbar[1]['URL'] = 'index.php';
  
 $navbar[2]['Name'] = "Test queries";
 $navbar[2]['URL'] = 'testqueries.php';
+
+$navbar[99]['Name'] = "Logfiles";
+$navbar[99]['URL'] = '/admin/system/logmanager.cgi?package='.LBPPLUGINDIR;
+$navbar[99]['target'] = '_blank';
