@@ -1,2 +1,2 @@
 #minute hour day_of_month month day_of_week user command
-0 * * * *  loxberry /usr/bin/php REPLACELBPHTMLAUTHDIR/tesla_command.php >/dev/null 2>&1
+0 * * * *  loxberry /usr/bin/php REPLACELBPHTMLAUTHDIR/tesla_command.php action=status >/dev/null 2>&1

@@ -50,14 +50,15 @@ if(isset($commands->{strtoupper($action)})) {
 	if (strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false) {
 		if(!empty($VID)) {
 			echo tesla_query( $VID, $action, $force );
-			LOGOK("tesla_command: vid: $VID, action: $action, force: $force");
+			//LOGOK("tesla_command: vid: $VID, action: $action, force: $force");
+			LOGOK("tesla_command: vid: $VID, action: $action".($force ? ", force: $force" : ""));
 		} else {
 			echo "VID missing\n";
 			LOGERR("tesla_command: VID missing");
 		}
 	} else {
+		LOGOK("tesla_command: action: $action".($force ? ", force: $force" : ""));
 		echo tesla_query( $VID, $action, $force );
-		LOGOK("tesla_command: action: $action, force: $force");
 	}
 } else {
 	echo "Command not found\n";

@@ -55,13 +55,12 @@ function tesla_refreshtoken()
 		return;
 	}
 	
-	LOGINF("tesla_refreshtoken: read loginfile");
+	LOGDEB("tesla_refreshtoken: read loginfile");
 	$logindata = file_get_contents(LOGINFILE);
 	$login = json_decode($logindata);
 	
 	// Read token
 	if( empty($login->bearer_token) ) {
-		
 		LOGERR("tesla_refreshtoken: File data error, no token found. Fallback to re-login");
 		return;
 	}
@@ -71,7 +70,6 @@ function tesla_refreshtoken()
 	$tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
 
     $timediff = 60*240; //60sec*240min (4h) 
-
 
 	LOGDEB("tesla_refreshtoken: Time now                  - ". time() ." ".gmdate("Y-m-d H:i:s", time()));
 	LOGDEB("tesla_refreshtoken: Refresh Token valid until - ". ($tokenexpires) ." ".gmdate("Y-m-d H:i:s", $tokenexpires));
@@ -223,7 +221,7 @@ function get_commands()
 	if( !file_exists(COMMANDFILE) ) {
 		LOGERR("get_commands: Commandfile missing, aborting");
 	} else {
-		LOGOK("get_commands: Read commandfile");
+		LOGDEB("get_commands: Read commandfile");
 		$commands = json_decode(file_get_contents(COMMANDFILE));
 	}
 	return $commands;
