@@ -47,5 +47,8 @@ echo "<INFO> Copy back existing config files"
 cp -f -r /tmp/$PTEMPDIR\_upgrade/config/$PDIR/sessiondata.json $LBHOMEDIR/config/plugins/$PDIR/ 
 chmod 0640 $LBHOMEDIR/config/plugins/$PDIR/sessiondata.json
 
+echo "<INFO> Updating crontab"
+sudo $LBHOMEDIR/sbin/installcrontab.sh $PSHNAME $(pwd)/cron/crontab
+
 # Exit with Status 0
 exit 0
