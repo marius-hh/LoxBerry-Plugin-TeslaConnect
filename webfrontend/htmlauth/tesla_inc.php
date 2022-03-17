@@ -41,7 +41,6 @@ $commands = get_commands();
 $login = tesla_refreshtoken();
 
 
-
 function tesla_refreshtoken()
 {
 	// Function to read token from file and refresh token, if expired
@@ -81,7 +80,7 @@ function tesla_refreshtoken()
 		$token = $login->bearer_token;
 	} elseif ($tokenexpires > time()) {
 		// Token expired
-		LOGERR("tesla_refreshtoken: Token expired (" . gmdate("Y-m-d\TH:i:s\Z", $tokenexpires) . ")");
+		LOGINF("tesla_refreshtoken: Token will expire (" . gmdate("Y-m-d\TH:i:s\Z", $tokenexpires) . "), refresh token");
 
 		$token = tesla_oauth2_refresh_token( $login->bearer_refresh_token );
 	} else {
@@ -138,13 +137,14 @@ function tesla_query( $VID, $COM, $force=false )
 	while($timeout > -1) {
 		if($type == "GET") {
 			//GET
+			LOGDEB("tesla_query: $type: $uri");
 			$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$uri, false ));
 			$data = json_decode($rawdata);
 			
 			if (!empty($data->error)) {
 				if (preg_match("/vehicle unavailable/i", $data->error) and $force==true) {
 					//Wake-Up Car if force==true
-					LOGINFO("tesla_query: $type: vehicle unavailable, wakeup car");
+					LOGINF("tesla_query: $type: vehicle unavailable, wakeup car");
 
 					$wake_up_uri = $commands->{"WAKE_UP"}->URI;
 					$wake_up_uri = str_replace("{vehicle_id}", "$VID", $wake_up_uri);
@@ -154,9 +154,9 @@ function tesla_query( $VID, $COM, $force=false )
 					
 					sleep(2);
 					$timeout = $timeout-1;
-					LOGERR("tesla_query: $type: timeout $timeout");
+					LOGDEB("tesla_query: $type: timeout $timeout");
 				} elseif (preg_match("/vehicle unavailable/i", $data->error)) {
-					LOGERR("tesla_query: $type: vehicle unavailable");
+					LOGDEB("tesla_query: $type: vehicle unavailable");
 					break;
 				} elseif (preg_match("/timeout/i", $data->error)) {
 					LOGDEB("tesla_query: $type: timeout");
@@ -180,6 +180,7 @@ function tesla_query( $VID, $COM, $force=false )
 			}
 		} else {
 			//POST
+			LOGDEB("tesla_query: $type: $uri");
 			$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$uri, false, true));
 			$data = json_decode($rawdata);
 			
@@ -187,7 +188,7 @@ function tesla_query( $VID, $COM, $force=false )
 				
 				if (preg_match("/vehicle unavailable/i", $data->error)) {
 					// Wake-Up Car
-					LOGERR("tesla_query: $type: vehicle unavailable, wakeup car");
+					LOGINF("tesla_query: $type: vehicle unavailable, wakeup car");
 					
 					$wake_up_uri = $commands->{"WAKE_UP"}->URI;
 					$wake_up_uri = str_replace("{vehicle_id}", "$VID", $wake_up_uri);
@@ -207,6 +208,9 @@ function tesla_query( $VID, $COM, $force=false )
 					LOGOK("tesla_query: $type: success");
 					break;
 				}
+			} else {
+				LOGOK("tesla_query: $type $COM: success");
+				break;
 			}
 		}
 	}
