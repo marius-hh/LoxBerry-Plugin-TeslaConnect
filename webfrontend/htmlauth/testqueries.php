@@ -220,6 +220,7 @@ if($tokenvalid == "false") {
 <?php
 				if(!$command_error){
 					$com = "?action=".$action.$command_get;
+					if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false) { $com = $com."&vid=$vid"; }
 					if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false and $force){ $com = $com."&force=true"; }
 					if(isset($commands->{"$action"}->URI)){ echo "TeslaConnect URI: <span class=\"mono\">".strtolower($lbzeurl.$com)."</span><br>"; }
 					if(isset($commands->{"$action"}->URI)){ echo "Tesla API URI: <span class=\"mono\">".BASEURL.$uri."</span><br>"; }
