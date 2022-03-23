@@ -29,6 +29,24 @@
         "AUTH": true,
         "DESC": "All information and states of the vehicle."
     },
+    "CHARGE_STATE": {
+        "TYPE": "GET",
+        "URI": "api/1/vehicles/{vehicle_id}/data_request/charge_state",
+        "AUTH": true,
+        "DESC": "Charge state information including battery limit, charge miles, charge voltage, charge phases, current, charge management, and battery heater status."
+    },
+    "CLIMATE_STATE": {
+        "TYPE": "GET",
+        "URI": "api/1/vehicles/{vehicle_id}/data_request/climate_state",
+        "AUTH": true,
+        "DESC": "Climate settings including seats, vents battery, steering wheel, and preconditioning state."
+    },
+    "DRIVE_STATE": {
+        "TYPE": "GET",
+        "URI": "api/1/vehicles/{vehicle_id}/data_request/drive_state",
+        "AUTH": true,
+        "DESC": "Drive state including latitude, longitude, and heading of the vehicle."
+    },
     "WAKE_UP": {
         "TYPE": "POST",
         "URI": "api/1/vehicles/{vehicle_id}/wake_up",
@@ -52,6 +70,35 @@
         "URI": "api/1/vehicles/{vehicle_id}/command/door_lock",
         "AUTH": true,
         "DESC": "Locks the doors to the vehicle."
+    },
+    "SUN_ROOF_CONTROL": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/sun_roof_control",
+        "AUTH": true,
+        "DESC": "Controls the panoramic sunroof on the Model S.",
+        "PARAM": {
+            "state": "The amount to open the sunroof. Currently this only allows the values vent and close."
+        }
+    },
+    "WINDOW_CONTROL": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/window_control",
+        "AUTH": true,
+        "DESC": "Controls the windows. Will vent or close all windows simultaneously.",
+        "PARAM": {
+            "command": "What action to take with the windows. Allows the values vent and close. lat and lon values must be near the current location of the car for operation to succeed.",
+            "lat": "Your current latitude. See Notes above.",
+            "lon": "Your current longitude. See Notes above."
+        }
+    },
+    "ACTUATE_TRUNK": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/actuate_trunk",
+        "AUTH": true,
+        "DESC": "Opens or close either the front or rear trunk.",
+        "PARAM": {
+            "which_trunk": "Which trunk to open/close. rear and front are the only options."
+        }
     },
     "HONK_HORN": {
         "TYPE": "POST",
@@ -81,7 +128,29 @@
         "TYPE": "POST",
         "URI": "api/1/vehicles/{vehicle_id}/command/set_preconditioning_max",
         "AUTH": true,
-        "DESC": "Toggles the climate controls between Max Defrost and the previous setting."
+        "DESC": "Toggles the climate controls between Max Defrost and the previous setting.",
+        "PARAM": {
+            "on": "True to turn on, false to turn off."
+        }
+    },
+    "REMOTE_SEAT_HEATER_REQUEST": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/remote_seat_heater_request",
+        "AUTH": true,
+        "DESC": "Sets the specified seat's heater level.",
+        "PARAM": {
+            "heater": "The desired seat to heat. (Front: left=0, right=1; Rear: left=2, center=4, right=5)",
+            "level": "The desired level for the heater. (0-3)"
+        }
+    },
+    "REMOTE_STEERING_WHEEL_HEATER_REQUEST": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/remote_steering_wheel_heater_request",
+        "AUTH": true,
+        "DESC": "Turn steering wheel heater on or off.",
+        "PARAM": {
+            "on": "True to turn on, false to turn off."
+        }
     },
     "SET_TEMPS": {
         "TYPE": "POST",
@@ -145,6 +214,31 @@
         "DESC": "Sets the charge amps limit to a custom value. (e.g. value 16)",
         "PARAM": {
             "charging_amps": "The max amps to use during charging."
+        }
+    },
+    "SET_SCHEDULED_DEPARTURE": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_scheduled_departure",
+        "AUTH": true,
+        "DESC": "Set the scheduled departure.",
+        "PARAM": {
+            "enable": "true for on, false for off.",
+            "departure_time": "time in minutes since midnight local time.",
+            "preconditioning_enabled": "true for on, false for off.",
+            "preconditioning_weekdays_only": "true for on, false for off.",
+            "off_peak_charging_enabled": "true for on, false for off.",
+            "off_peak_charging_weekdays_only": "true for on, false for off.",
+            "end_off_peak_time": "time in minutes since midnight local time."
+        }
+    },
+    "SET_SCHEDULED_CHARGING": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_scheduled_charging",
+        "AUTH": true,
+        "DESC": "Set the scheduled charge.",
+        "PARAM": {
+            "enable": "true for on, false for off.",
+            "time": "time in minutes since midnight local time."
         }
     }
 }
