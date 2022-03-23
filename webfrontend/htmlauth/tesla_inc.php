@@ -477,14 +477,15 @@ function return_msg($code, $msg)
     return json_encode(array("success" => $code, "message" => $msg));
 }
 
-
 function login($weburl, $code_verifier, $code_challenge, $state)
 {
     global $tesla_api_redirect, $user_agent, $tesla_api_oauth2, $cid, $cs, $tesla_api_owners;
 
     
     $code = explode('https://auth.tesla.com/void/callback?code=', $weburl);
+	LOGDEB("login: code: ".json_encode($code));
     $code = explode("&", $code[1])[0];
+	LOGDEB("login: code: $code");
 
 
     if(empty($code)) { return return_msg(0, "Something is wrong ... Code not exists"); }
@@ -493,23 +494,32 @@ function login($weburl, $code_verifier, $code_challenge, $state)
     $http_header = array('Content-Type: application/json', 'Accept: application/json', 'User-Agent: '.$user_agent);
     $post = json_encode(array("grant_type" => "authorization_code", "client_id" => "ownerapi", "code" => $code, "code_verifier" => $code_verifier, "redirect_uri" => $tesla_api_redirect));
     $response = tesla_connect($tesla_api_oauth2."/token", 1, "", $http_header, $post, 0);
+	//LOGDEB("login: response: ".json_encode($response));
+	//echo "$response";
 
     $token_res = json_decode($response["response"], true);
+	
     $bearer_token = $token_res["access_token"];
     $refresh_token = $token_res["refresh_token"];
+	//LOGDEB("login: bearer_token: ".$bearer_token);
+	//LOGDEB("login: refresh_token: ".$refresh_token);
+
 
     if(empty($bearer_token)) { return return_msg(0, "Bearer Token issue"); }
 
     // Final Step
+/* REM 22.03.2022
     unset($response);
     $http_header = array('Authorization: Bearer '.$bearer_token, 'Content-Type: application/json');
     $post = json_encode(array("grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer", "client_id" => $cid, "client_secret" => $cs));
     $response = tesla_connect($tesla_api_owners, 1, "", $http_header, $post, 0);
-
+	LOGDEB("login: response: ".json_encode($response));
     $tokens = json_decode($response["response"], true);
+	var_dump("$tokens");
 
     if(empty($tokens['access_token'])) { return return_msg(0, "Token issue"); }
-
+    */
+	$tokens = json_decode($response["response"], true);
     $tokens["bearer_token"] = $bearer_token;
     $tokens["bearer_refresh_token"] = $refresh_token;
     $return_message = json_encode($tokens);
@@ -540,11 +550,11 @@ function tesla_oauth2_refresh_token($bearer_refresh_token)
 
 
     if(empty($bearer_token)) { return return_msg(0, "Bearer Refresh Token is not valid"); }
-
+/* REM 22.03.2022
     $http_header = array('Authorization: Bearer '.$bearer_token, 'Content-Type: application/json');
     $post = json_encode(array("grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer", "client_id" => $cid, "client_secret" => $cs));
     $response = tesla_connect($tesla_api_owners, 1, "", $http_header, $post, 0);
-
+*/
     $tokens = json_decode($response["response"], true);
 
     if(empty($tokens['access_token'])) { return return_msg(0, "Token issue"); }
@@ -559,5 +569,3 @@ function tesla_oauth2_refresh_token($bearer_refresh_token)
     // Output
     return $bearer_token;
 }
-
-//LOGEND("Logging stopped");
