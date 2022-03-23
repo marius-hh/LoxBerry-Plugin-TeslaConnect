@@ -32,7 +32,7 @@ $cs = "c7257eb71a564034f9419ee651c7d0e5f7aa6bfbd18bafb5c5c033b093bb2fa3";
 $user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
 
 // Init
-$VID = false;
+$vid = false;
 $force = false;
 $token = false;
 $action = "noaction";
@@ -109,7 +109,7 @@ function tesla_summary()
 	}
 } 
 
-// Check if function needed
+// TODO: Check if function needed
 function tesla_checktoken()
 {
 	// Function to check if token is valid
@@ -126,7 +126,43 @@ function tesla_checktoken()
 } 
 
 
-function tesla_query( $VID, $COM, $force=false )
+function tesla_check_parameter($action, $values)
+{
+	// Function to check required parameters
+	global $commands;
+	$PARAM = new stdClass();
+	$PARAM_POST = new stdClass();
+
+	// Check if Vehicle ID nessesary
+	if (strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false) {
+		$PARAM = (object)["vid" => "The id of the vehicle."];
+	}
+
+	if(isset($commands->{strtoupper($action)}->PARAM)) {
+		foreach ($commands->{strtoupper($action)}->PARAM as $param => $param_desc) {
+			$PARAM->$param = $param_desc;
+		}
+	}
+
+	foreach ($PARAM as $param => $param_desc) {
+		if(isset($values["$param"])) {
+			LOGDEB("$param: ".$values["$param"]);
+
+			if(isset($commands->{strtoupper($action)}->PARAM->$param)){
+				$PARAM_POST->$param = $values["$param"];
+			}
+		} else {
+			echo "Parameter \"$param\" missing! $param_desc\n";
+			LOGERR("tesla_command: Parameter \"$param\" missing");
+		}
+	}
+	LOGDEB(json_encode($PARAM));
+	LOGDEB(json_encode($PARAM_POST));
+	return $PARAM;
+}
+
+
+function tesla_query( $VID, $COM, $POST=false, $force=false )
 {
 	// Function to send query to tesla api
 		
@@ -187,7 +223,7 @@ function tesla_query( $VID, $COM, $force=false )
 		} else {
 			//POST
 			LOGDEB("tesla_query: $type: $uri");
-			$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$uri, false, true));
+			$rawdata = preg_replace('/("\w+"):(\d+(\.\d+)?)/', '\\1:"\\2"', tesla_curl_send( BASEURL.$uri, $POST, true));
 			$data = json_decode($rawdata);
 			
 			if (!empty($data->error)) {
@@ -221,7 +257,7 @@ function tesla_query( $VID, $COM, $force=false )
 			}
 		}
 	}
-	return $rawdata;
+	return "$rawdata\n";
 }
 
 
@@ -358,6 +394,7 @@ function tesla_curl_send( $url, $payload, $post=false )
 
 	if( !empty($payload) ) {
 		$payload = json_encode ( $payload );
+		LOGDEB("tesla_curl_send: Payload: $payload");
 	} else {
 		$payload = "";
 	}
@@ -477,6 +514,7 @@ function return_msg($code, $msg)
     return json_encode(array("success" => $code, "message" => $msg));
 }
 
+
 function login($weburl, $code_verifier, $code_challenge, $state)
 {
     global $tesla_api_redirect, $user_agent, $tesla_api_oauth2, $cid, $cs, $tesla_api_owners;
@@ -494,31 +532,14 @@ function login($weburl, $code_verifier, $code_challenge, $state)
     $http_header = array('Content-Type: application/json', 'Accept: application/json', 'User-Agent: '.$user_agent);
     $post = json_encode(array("grant_type" => "authorization_code", "client_id" => "ownerapi", "code" => $code, "code_verifier" => $code_verifier, "redirect_uri" => $tesla_api_redirect));
     $response = tesla_connect($tesla_api_oauth2."/token", 1, "", $http_header, $post, 0);
-	//LOGDEB("login: response: ".json_encode($response));
-	//echo "$response";
 
     $token_res = json_decode($response["response"], true);
 	
     $bearer_token = $token_res["access_token"];
     $refresh_token = $token_res["refresh_token"];
-	//LOGDEB("login: bearer_token: ".$bearer_token);
-	//LOGDEB("login: refresh_token: ".$refresh_token);
-
 
     if(empty($bearer_token)) { return return_msg(0, "Bearer Token issue"); }
 
-    // Final Step
-/* REM 22.03.2022
-    unset($response);
-    $http_header = array('Authorization: Bearer '.$bearer_token, 'Content-Type: application/json');
-    $post = json_encode(array("grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer", "client_id" => $cid, "client_secret" => $cs));
-    $response = tesla_connect($tesla_api_owners, 1, "", $http_header, $post, 0);
-	LOGDEB("login: response: ".json_encode($response));
-    $tokens = json_decode($response["response"], true);
-	var_dump("$tokens");
-
-    if(empty($tokens['access_token'])) { return return_msg(0, "Token issue"); }
-    */
 	$tokens = json_decode($response["response"], true);
     $tokens["bearer_token"] = $bearer_token;
     $tokens["bearer_refresh_token"] = $refresh_token;
@@ -550,11 +571,7 @@ function tesla_oauth2_refresh_token($bearer_refresh_token)
 
 
     if(empty($bearer_token)) { return return_msg(0, "Bearer Refresh Token is not valid"); }
-/* REM 22.03.2022
-    $http_header = array('Authorization: Bearer '.$bearer_token, 'Content-Type: application/json');
-    $post = json_encode(array("grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer", "client_id" => $cid, "client_secret" => $cs));
-    $response = tesla_connect($tesla_api_owners, 1, "", $http_header, $post, 0);
-*/
+
     $tokens = json_decode($response["response"], true);
 
     if(empty($tokens['access_token'])) { return return_msg(0, "Token issue"); }

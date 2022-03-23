@@ -83,6 +83,16 @@
         "AUTH": true,
         "DESC": "Toggles the climate controls between Max Defrost and the previous setting."
     },
+    "SET_TEMPS": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_temps",
+        "AUTH": true,
+        "DESC": "Sets the target temperature for the climate control (HVAC) system. (e.g. value 20)",
+        "PARAM": {
+            "driver_temp": "The desired temperature on the driver's side in celsius.",
+            "passenger_temp": "The desired temperature on the passenger's side in celsius."
+        }
+    },
     "CHARGE_PORT_DOOR_OPEN": {
         "TYPE": "POST",
         "URI": "api/1/vehicles/{vehicle_id}/command/charge_port_door_open",
@@ -106,5 +116,35 @@
         "URI": "api/1/vehicles/{vehicle_id}/command/charge_stop",
         "AUTH": true,
         "DESC": "If the car is currently charging, this will stop it."
+    },
+    "CHARGE_STANDARD": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/charge_standard",
+        "AUTH": true,
+        "DESC": "Set vehicle to standard charge limit or ~90%."
+    },
+    "CHARGE_MAX_RANGE": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/charge_max_range",
+        "AUTH": true,
+        "DESC": "Set the vehicle to max charge limit."
+    },
+    "SET_CHARGE_LIMIT": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_charge_limit",
+        "AUTH": true,
+        "DESC": "Set the vehicle to defined charge limit. (e.g. value 80)",
+        "PARAM": {
+            "percent": "The percentage the battery will charge until."
+        }
+    },
+    "SET_CHARGING_AMPS": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_charging_amps",
+        "AUTH": true,
+        "DESC": "Sets the charge amps limit to a custom value. (e.g. value 16)",
+        "PARAM": {
+            "charging_amps": "The max amps to use during charging."
+        }
     }
 }
