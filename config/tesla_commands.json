@@ -240,5 +240,30 @@
             "enable": "true for on, false for off.",
             "time": "time in minutes since midnight local time."
         }
+    },
+    "SET_VALET_MODE": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_valet_mode",
+        "AUTH": true,
+        "DESC": "Activates or deactivates Valet Mode.",
+        "PARAM": {
+            "on": "True to turn on, false to turn off.",
+            "password": "A PIN to deactivate Valet Mode (e.g. 1234). "
+        }
+    },
+    "RESET_VALET_PIN": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/reset_valet_pin",
+        "AUTH": true,
+        "DESC": "Clears the currently set PIN for Valet Mode when deactivated. A new PIN will be required when activating from the car screen."
+    },
+    "SET_SENTRY_MODE": {
+        "TYPE": "POST",
+        "URI": "api/1/vehicles/{vehicle_id}/command/set_sentry_mode",
+        "AUTH": true,
+        "DESC": "Turns sentry mode on or off.",
+        "PARAM": {
+            "on": "True to turn on, false to turn off."
+        }
     }
 }
