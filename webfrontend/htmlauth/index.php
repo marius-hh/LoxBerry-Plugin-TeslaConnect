@@ -1,4 +1,9 @@
 <?php
+// TODO: Create pages
+// [ ] Statuspage
+// [ ] Querypage
+// [ ] Testpage
+
 require_once "loxberry_system.php";
 require_once "loxberry_web.php";
 require_once "defines.php";

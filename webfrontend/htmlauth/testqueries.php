@@ -9,6 +9,13 @@ $navbar[2]['active'] = True;
 // Print LoxBerry header
 $L = LBSystem::readlanguage("language.ini");
 LBWeb::lbheader($template_title, $helplink, $helptemplate);
+
+// Define action
+if(!empty($_REQUEST["action"])) { 
+	$action = strtoupper($_REQUEST["action"]);
+} elseif (!empty($_REQUEST["a"])) { 
+	$action = strtoupper($_REQUEST["a"]);
+}
 ?>
 
 <style>
@@ -129,7 +136,7 @@ if($tokenvalid == "false") {
                     </label>
                 </td>
                 <td>
-                    <select name="action">
+                    <select name="action" onchange="self.location='?action='+this.options[this.selectedIndex].value;">
 
 <?php
 								foreach ($commands as $command => $attribut) {
@@ -202,12 +209,8 @@ if($tokenvalid == "false") {
 
             </div>
         </form>
-
-<?php
-			if (isset($commandoutput)){
-?>
-
-        <hr>
+<!-- NEW -->
+	<hr>
         <h3>Description</h3>
         <p>
 
@@ -216,6 +219,10 @@ if($tokenvalid == "false") {
 ?>
 
         </p>
+
+<?php
+			if (isset($commandoutput)){
+?>
 
 <?php
 				if(!$command_error){
