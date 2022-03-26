@@ -1,5 +1,6 @@
 <?php
 //TODO: Add more commands
+//TODO: Add command to check if token valid
 /*
 php ./tesla_command.php a=summary
 php ./tesla_command.php action=summary

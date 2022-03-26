@@ -357,12 +357,14 @@ function mqttpublish($data, $mqttsubtopic="")
 						if(is_object($svalue)) {
 							foreach ($svalue as $sskey => $ssvalue){
 								if(!empty($ssvalue)){ 
+									if($sskey == "timestamp") { $ssvalue = substr($ssvalue, 0, 10); } //epochetime maxlength
 									$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
 									LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
 								}
 							}
 						} else {
 							if(!empty($svalue)){ 
+								if($skey == "timestamp") { $svalue = substr($svalue, 0, 10); } //epochetime maxlength
 								$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey", $svalue, 0, 1);
 								LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey: $svalue");
 							}
@@ -385,6 +387,8 @@ function mqttpublish($data, $mqttsubtopic="")
 				}
 			}
 		}
+		$mqtt->publish(MQTTTOPIC."/timestamp", time(), 0, 1);
+		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: time()");
         $mqtt->close();
     } else {
 		LOGDEB("mqttpublish: MQTT connection failed");
