@@ -388,7 +388,7 @@ function mqttpublish($data, $mqttsubtopic="")
 			}
 		}
 		$mqtt->publish(MQTTTOPIC."/timestamp", time(), 0, 1);
-		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: time()");
+		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: ".time());
         $mqtt->close();
     } else {
 		LOGDEB("mqttpublish: MQTT connection failed");
