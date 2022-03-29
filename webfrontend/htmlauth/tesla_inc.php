@@ -211,13 +211,16 @@ function tesla_query( $VID, $COM, $POST=false, $force=false )
 					$returndata = $data->response;
 					if(isset($returndata->id)){
 						mqttpublish($returndata, "/$returndata->id");
-					} elseif(isset($value->id)) {
-						foreach($returndata as $value) {
-							mqttpublish($value, "/$value->id");
-						}
+					//TODO: check if needed?
+					//} elseif(isset($value->id)) {
+					//	foreach($returndata as $value) {
+					//		mqttpublish($value, "/$value->id");
+					//	}
 					} else {
-							mqttpublish($returndata, "/$VID"."/".strtolower($COM));
+						mqttpublish($returndata, "/$VID"."/".strtolower($COM));
 					}
+				} else {
+						mqttpublish($rawdata, "/".strtolower($COM));
 				}
 				LOGOK("Query: $COM: success");
 				break;
@@ -386,6 +389,9 @@ function mqttpublish($data, $mqttsubtopic="")
 					}
 				}
 			}
+		} else {
+			$mqtt->publish(MQTTTOPIC."$mqttsubtopic", $data, 0, 1);
+			LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic: $data");
 		}
 		$mqtt->publish(MQTTTOPIC."/timestamp", time(), 0, 1);
 		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: ".time());
