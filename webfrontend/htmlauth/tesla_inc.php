@@ -1,5 +1,6 @@
 <?php
-//[ ] modified time to os time
+//[x] modified time to os time
+//[x] changed epoche time to loxtime
 $debugscript = true;
 
 include_once "loxberry_system.php";
@@ -46,6 +47,7 @@ function tesla_refreshtoken()
 {
 	// Function to read token from file and refresh token, if expired
 	// Reads login data from disk, and checks for expiration of the token
+	//[x] Add token_expires to mqtt
 	LOGINF("Check token.");
 	
 	global $token;
@@ -74,21 +76,32 @@ function tesla_refreshtoken()
 
     $timediff = 60*240; //60sec*240min (4h) 
 
-	LOGDEB("tesla_refreshtoken: Time now                  - ". time() ." ".gmdate("Y-m-d H:i:s", time()));
-	LOGDEB("tesla_refreshtoken: Refresh Token valid until - ". ($tokenexpires) ." ".gmdate("Y-m-d H:i:s", $tokenexpires));
-    LOGDEB("tesla_refreshtoken: Time to Refresh Token     - ". ($tokenexpires-$timediff) ." ".gmdate("Y-m-d H:i:s", $tokenexpires-$timediff));
+	LOGDEB("tesla_refreshtoken: Time now                  - ". time() ." ".date("Y-m-d H:i:s", time()));
+	LOGDEB("tesla_refreshtoken: Refresh Token valid until - ". ($tokenexpires) ." ".date("Y-m-d H:i:s", $tokenexpires));
+    LOGDEB("tesla_refreshtoken: Time to Refresh Token     - ". ($tokenexpires-$timediff) ." ".date("Y-m-d H:i:s", $tokenexpires-$timediff));
 	
 	if( $tokenexpires-$timediff > time() ) {
 		// Token is valid
-		LOGOK("Token valid (" . gmdate("Y-m-d\TH:i:s\Z", $tokenexpires) . ").");
+		mqttpublish(1, "/token_valid");
+		mqttpublish(epoch2lox($tokenexpires), "/token_expires");
+		LOGOK("Token valid (" . date("Y-m-d\TH:i:s", $tokenexpires) . ").");
 		$token = $login->bearer_token;
 	} elseif ($tokenexpires > time()) {
 		// Token expired
-		LOGINF("Token will expire (" . gmdate("Y-m-d\TH:i:s\Z", $tokenexpires) . "), refresh token.");
+		LOGINF("Token will expire (" . date("Y-m-d\TH:i:s", $tokenexpires) . "), refresh token.");
 
 		$token = tesla_oauth2_refresh_token( $login->bearer_refresh_token );
+		if(!empty($token)) {
+			mqttpublish(1, "/token_valid");
+			mqttpublish(epoch2lox($tokenexpires), "/token_expires");
+		} else {
+			mqttpublish(0, "/token_valid");
+			mqttpublish(0, "/token_expires");
+		}
 	} else {
 		// no valid token
+		mqttpublish(0, "/token_valid");
+		mqttpublish(epoch2lox($tokenexpires), "/token_expires");
 		LOGERR("No valid token, please login.");
 	}
 	return $login;
@@ -343,7 +356,7 @@ function pretty_print($json_data)
 function mqttpublish($data, $mqttsubtopic="")
 {
 	// Function to send data to mqtt
-	global $login;
+	
 	// MQTT requires a unique client id
 	$client_id = uniqid(gethostname()."_client");
 	$creds = mqtt_connectiondetails();
@@ -362,14 +375,14 @@ function mqttpublish($data, $mqttsubtopic="")
 						if(is_object($svalue)) {
 							foreach ($svalue as $sskey => $ssvalue){
 								if(!empty($ssvalue)){ 
-									if($sskey == "timestamp") { $ssvalue = substr($ssvalue, 0, 10); } //epochetime maxlength
+									if($sskey == "timestamp") { $ssvalue = epoch2lox(substr($ssvalue, 0, 10)); } //epochetime maxlength
 									$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
 									LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
 								}
 							}
 						} else {
 							if(!empty($svalue)){ 
-								if($skey == "timestamp") { $svalue = substr($svalue, 0, 10); } //epochetime maxlength
+								if($skey == "timestamp") { $svalue = epoch2lox(substr($svalue, 0, 10)); } //epochetime maxlength
 								$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey", $svalue, 0, 1);
 								LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey: $svalue");
 							}
@@ -395,19 +408,9 @@ function mqttpublish($data, $mqttsubtopic="")
 			$mqtt->publish(MQTTTOPIC."$mqttsubtopic", $data, 0, 1);
 			LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic: $data");
 		}
-		//Query timestamp
-		$mqtt->publish(MQTTTOPIC."/timestamp", time(), 0, 1);
-		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: ".time());
-
-		//[x] Add token_expires to mqtt
-		//Get date part of token
-		$tokenparts = explode(".", $login->bearer_token);
-		$tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
-		if(!isset($tokenexpires)) { $tokenexpires=0; }
-
-		$mqtt->publish(MQTTTOPIC."/token_expires", $tokenexpires, 0, 1);
-		LOGDEB("mqttpublish: ".MQTTTOPIC."/token_expires: ".$tokenexpires);
-
+		//[x] Query timestamp added
+		$mqtt->publish(MQTTTOPIC."/timestamp", epoch2lox(time()), 0, 1);
+		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: ".epoch2lox(time()));
         $mqtt->close();
     } else {
 		LOGDEB("mqttpublish: MQTT connection failed");

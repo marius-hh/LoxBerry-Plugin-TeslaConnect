@@ -40,7 +40,7 @@ if($tokenvalid == "true") {
 
 <p style="color:green">
     <b>You are logged in, token is valid until
-        <?=gmdate("Y-m-d H:i:s", $tokenexpires)?>
+        <?=date("Y-m-d H:i:s", $tokenexpires)?>
         (<a href="?delete_token">delete token</a>).</b>
 </p><br>
 
