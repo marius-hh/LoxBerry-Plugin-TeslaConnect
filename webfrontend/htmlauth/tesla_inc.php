@@ -1,4 +1,5 @@
 <?php
+//[ ] modified time to os time
 $debugscript = true;
 
 include_once "loxberry_system.php";
@@ -220,6 +221,7 @@ function tesla_query( $VID, $COM, $POST=false, $force=false )
 						mqttpublish($returndata, "/$VID"."/".strtolower($COM));
 					}
 				} else {
+					//[x] fixed status output
 						mqttpublish($rawdata, "/".strtolower($COM));
 				}
 				LOGOK("Query: $COM: success");
@@ -341,7 +343,7 @@ function pretty_print($json_data)
 function mqttpublish($data, $mqttsubtopic="")
 {
 	// Function to send data to mqtt
-
+	global $login;
 	// MQTT requires a unique client id
 	$client_id = uniqid(gethostname()."_client");
 	$creds = mqtt_connectiondetails();
@@ -393,8 +395,19 @@ function mqttpublish($data, $mqttsubtopic="")
 			$mqtt->publish(MQTTTOPIC."$mqttsubtopic", $data, 0, 1);
 			LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic: $data");
 		}
+		//Query timestamp
 		$mqtt->publish(MQTTTOPIC."/timestamp", time(), 0, 1);
 		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: ".time());
+
+		//[x] Add token_expires to mqtt
+		//Get date part of token
+		$tokenparts = explode(".", $login->bearer_token);
+		$tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
+		if(!isset($tokenexpires)) { $tokenexpires=0; }
+
+		$mqtt->publish(MQTTTOPIC."/token_expires", $tokenexpires, 0, 1);
+		LOGDEB("mqttpublish: ".MQTTTOPIC."/token_expires: ".$tokenexpires);
+
         $mqtt->close();
     } else {
 		LOGDEB("mqttpublish: MQTT connection failed");
