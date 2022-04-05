@@ -368,7 +368,8 @@ function mqttpublish($data, $mqttsubtopic="")
 		LOGDEB("mqttpublish: MQTT connection successful");
 		LOGOK("MQTT: Connection successful.");
 
-		if(is_object($data)){
+		//[x] Added or is_array() 05.04.2022
+		if(is_object($data) or is_array($data)){
 			foreach ($data as $key => $value) {
 				if(is_object($value)) {
 					foreach ($value as $skey => $svalue){
@@ -408,9 +409,9 @@ function mqttpublish($data, $mqttsubtopic="")
 			$mqtt->publish(MQTTTOPIC."$mqttsubtopic", $data, 0, 1);
 			LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic: $data");
 		}
-		//[x] Query timestamp added
-		$mqtt->publish(MQTTTOPIC."/timestamp", epoch2lox(time()), 0, 1);
-		LOGDEB("mqttpublish: ".MQTTTOPIC."/timestamp: ".epoch2lox(time()));
+		//[x] Query timestamp added, changed to mqtt_timestamp
+		$mqtt->publish(MQTTTOPIC."/mqtt_timestamp", epoch2lox(time()), 0, 1);
+		LOGDEB("mqttpublish: ".MQTTTOPIC."/mqtt_timestamp: ".epoch2lox(time()));
         $mqtt->close();
     } else {
 		LOGDEB("mqttpublish: MQTT connection failed");
