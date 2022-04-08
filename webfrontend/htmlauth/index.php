@@ -251,7 +251,7 @@ if (isset($_GET['delete_token'])) {
 <!-- MQTT -->
 <div class="wide">MQTT</div>
 <p>All data is transferred via MQTT. The subscription for this is
-    <span class="mono">teslaconnect/#</span>
+    <span class="mono"><?=MQTTTOPIC?>/#</span>
     and is automatically registered in the MQTT gateway plugin.</p>
 
 <?php
