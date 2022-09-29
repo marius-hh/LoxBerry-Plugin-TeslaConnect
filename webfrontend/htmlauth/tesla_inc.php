@@ -568,9 +568,10 @@ function login($weburl, $code_verifier, $code_challenge, $state)
     global $tesla_api_redirect, $user_agent, $tesla_api_oauth2, $cid, $cs, $tesla_api_owners;
 
     
-    $code = explode('https://auth.tesla.com/void/callback?code=', $weburl);
-	LOGDEB("login: code: ".json_encode($code));
-    $code = explode("&", $code[1])[0];
+	$urlparm = explode('https://auth.tesla.com/void/callback?', $weburl);
+	LOGDEB("login: code: ".json_encode($urlparm));
+	parse_str($urlparm[1], $parm);
+    $code = $parm['code'];
 	LOGDEB("login: code: $code");
 
 

@@ -60,12 +60,13 @@ if (isset($_GET['delete_token'])) {
 	echo "<script> location.href='index.php'; </script>";
 } else if(isset($_POST["login"])) {
 	$output = json_decode(login($_POST["weburl"], $_POST["code_verifier"], $_POST["code_challenge"], $_POST["state"]));
-	echo $output;
+
 	if($output->success == 0) {
 		echo "<br><br>".$output->message."<br><br>";
-		echo "Try again. <a href=index.php>Click here</a> to login.";
+		echo "Try again. <a href=index.php>Click here</a> to login.<br><br>";
 	} else {
-		echo "<script> location.href='index.php'; </script>";
+		echo "Login successful. <a href=index.php>Click here to continue</a>.";
+        echo "<script> location.href='index.php'; </script>";
 	}
 } else {
 ?>
