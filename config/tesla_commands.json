@@ -265,5 +265,17 @@
         "PARAM": {
             "on": "True to turn on, false to turn off."
         }
+    },
+    "LIVE_STATUS": {
+        "TYPE": "GET",
+        "URI": "api/1/energy_sites/{vehicle_id}/live_status",
+        "AUTH": true,
+        "DESC": "Only for energy products!<br>Retrieves current system information (e.g. solar production, grid export/import, home consumption, etc.)."
+    },
+    "SITE_INFO": {
+        "TYPE": "GET",
+        "URI": "api/1/energy_sites/{vehicle_id}/site_info",
+        "AUTH": true,
+        "DESC": "Only for energy products!<br>Retrieves general system information."
     }
 }
