@@ -224,14 +224,15 @@ function tesla_query( $VID, $COM, $POST=false, $force=false )
 				if(isset($data->response)) {
 					$returndata = $data->response;
 					if(isset($returndata->id)){
+						LOGDEB('if(isset($returndata->id))');
 						mqttpublish($returndata, "/$returndata->id");
-					//TODO: check if needed?
-					//} elseif(isset($value->id)) {
-					//	foreach($returndata as $value) {
-					//		mqttpublish($value, "/$value->id");
-					//	}
 					} else {
-						mqttpublish($returndata, "/$VID"."/".strtolower($COM));
+						// [ ] Bugfix empty $VID
+						if(!empty($VID)){
+							mqttpublish($returndata, "/$VID"."/".strtolower($COM));
+						} else {
+							mqttpublish($returndata, "/".strtolower($COM));
+						}
 					}
 				} else {
 					//[x] fixed status output
@@ -356,6 +357,8 @@ function pretty_print($json_data)
 function mqttpublish($data, $mqttsubtopic="")
 {
 	// Function to send data to mqtt
+	// [ ] Bugfix missing 0 values
+	// [ ] Bugfix missing false output
 	
 	// MQTT requires a unique client id
 	$client_id = uniqid(gethostname()."_client");
@@ -368,29 +371,33 @@ function mqttpublish($data, $mqttsubtopic="")
 		LOGDEB("mqttpublish: MQTT connection successful");
 		LOGOK("MQTT: Connection successful.");
 
-		//[x] Added or is_array() 05.04.2022
 		if(is_object($data) or is_array($data)){
 			foreach ($data as $key => $value) {
 				if(is_object($value)) {
 					foreach ($value as $skey => $svalue){
 						if(is_object($svalue)) {
 							foreach ($svalue as $sskey => $ssvalue){
-								if(!empty($ssvalue)){ 
+								if(isset($ssvalue)){ 
 									if($sskey == "timestamp") { $ssvalue = epoch2lox(substr($ssvalue, 0, 10)); } //epochetime maxlength
+									if($ssvalue == false) { $ssvalue = 0; }
 									$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
 									LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
 								}
 							}
 						} else {
-							if(!empty($svalue)){ 
+							if(is_array($svalue)){
+								$svalue = implode(",", $svalue);
+							}
+							if(isset($svalue)){ 
 								if($skey == "timestamp") { $svalue = epoch2lox(substr($svalue, 0, 10)); } //epochetime maxlength
+								if($svalue == false) { $svalue = 0; }
 								$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey", $svalue, 0, 1);
 								LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey: $svalue");
 							}
 						}
 					}
 				} else {
-					if(!empty($value)){
+					if(isset($value)){
 						if(is_array($value)){
 							$value = implode(",", $value);
 						}
