@@ -1,14 +1,22 @@
 <?php
 require_once "loxberry_system.php";
 require_once "loxberry_web.php";
-require_once "defines.php";
 require_once "tesla_inc.php";
+require_once "defines.php";
 
-$navbar[2]['active'] = True;
+$navbar[3]['active'] = True;
 
 // Print LoxBerry header
 $L = LBSystem::readlanguage("language.ini");
 LBWeb::lbheader($template_title, $helplink, $helptemplate);
+
+// Define action
+if(!empty($_REQUEST["type"])) { 
+	$type = strtoupper($_REQUEST["type"]);
+	$vid = $type;
+} else {
+	$type = "GENERAL";
+}
 
 // Define action
 if(!empty($_REQUEST["action"])) { 
@@ -16,6 +24,11 @@ if(!empty($_REQUEST["action"])) {
 } elseif (!empty($_REQUEST["a"])) { 
 	$action = strtoupper($_REQUEST["a"]);
 }
+
+//Checktoken
+$tokenvalid = tesla_checktoken();
+$tokenparts = explode(".", $login->bearer_token);
+$tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
 ?>
 
 <style>
@@ -29,11 +42,7 @@ if(!empty($_REQUEST["action"])) {
 </style>
 
 <?php
-//Checktoken
-$tokenvalid = tesla_checktoken();
-$tokenparts = explode(".", $login->bearer_token);
-$tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
-
+// if($tokenvalid == "false")
 if($tokenvalid == "false") {
 ?>
 
@@ -41,9 +50,11 @@ if($tokenvalid == "false") {
 <div class="wide">Status</div>
 <p style="color:red">
     <b>You are not logged in.</b>
-</p><br>
+</p>
+<br>
 
 <?php
+// if($tokenvalid == "false")
 } else {
 ?>
 
@@ -51,84 +62,108 @@ if($tokenvalid == "false") {
 <?php
 	$vehicles = tesla_summary();
 
-	if(isset($vehicles)) {
+		if (isset($_GET['test_query'])) {
+			if(isset($_POST['action'])){
+				$action = $_POST['action'];
+				$force = $_POST['force'];
+				$uri = $commands->{"$action"}->URI;
+				
+				if(isset($commands->{strtoupper($action)})) {
+					$command_post = [];
+					$command_post_print = "";
+					$command_get = "";
+					$command_output = "";
+					$command_error = false;
+
+					if (strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') == true || strpos($commands->{strtoupper($action)}->URI, '{energy_site_id}') == true) {
+						if(!empty($vid)) {
+							LOGDEB("teslaqueries: vid: ".$vid);
+							$uri = str_replace("{vehicle_id}", "$vid", $uri);
+							$uri = str_replace("{energy_site_id}", "$vid", $uri);
+						} else {
+							$command_output =  $command_output."Parameter \"VID\" missing! The id of the vehicle.\n";
+							LOGINF("Parameter \"VID\" missing");
+							$command_error = true;
+						}
+
+						if(isset($commands->{strtoupper($action)}->PARAM)) {
+							foreach ($commands->{strtoupper($action)}->PARAM as $param => $param_desc) {
+								
+								if(!empty($_REQUEST["$param"])) {
+									LOGDEB("teslaqueries: $param: ".$_REQUEST["$param"]);
+									$command_post += array("$param" => $_REQUEST["$param"]);
+									$command_post_print = $command_post_print.", $param: ".$_REQUEST["$param"];
+									$command_get = $command_get."&$param=".$_REQUEST["$param"];
+								} else {
+									$commandoutput = $commandoutput."Parameter \"$param\" missing! $param_desc\n";
+									LOGINF("Parameter \"$param\" missing");
+									$command_error = true;
+								}
+							}
+						}
+						
+						if (!$command_error) {
+						$commandoutput = tesla_query( $vid, $action, $command_post, $force );
+						LOGOK("teslaqueries: vid: $vid, action: $action".$command_post_print.($force ? ", force: $force" : ""));
+						}
+
+					} else {
+						LOGOK("teslaqueries: action: $action".($force ? ", force: $force" : ""));
+						$commandoutput = tesla_query( $vid, $action, $command_post, $force );
+					}
+				} else {
+					$commandoutput =  "Command not found\n";
+					LOGERR("teslaqueries: Command not found");
+				}
+			}
+		}
 ?>
 
 <div class="wide">Test Queries</div>
 
-<?php
-		// foreach vehicles
-		foreach ($vehicles as $vehicle) {
-			$name = $vehicle->display_name;
-			$vid = strval($vehicle->id);
-			$state = $vehicle->state;
-?>
-
-<h2>Queries for
-    <?=$name . " (VID: " . $vid . ")\n"; ?></h2>
-
-<?php
-	
-			if (isset($_GET['test_query'])) 
-			{
-				if(isset($_POST['action'])){
-					$action = $_POST['action'];
-					$force = $_POST['force'];
-					$uri = $commands->{"$action"}->URI;
-					$uri = str_replace("{vehicle_id}", "$vid", $uri);
-					
-					if(isset($commands->{strtoupper($action)})) {
-						$command_post = [];
-						$command_post_print = "";
-						$command_get = "";
-						$command_output = "";
-						$command_error = false;
-
-						if (strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false) {
-							if(!empty($vid)) {
-								LOGDEB("teslaqueries: vid: ".$vid);
-							} else {
-								$command_output =  $command_output."Parameter \"VID\" missing! The id of the vehicle.\n";
-								LOGINF("Parameter \"VID\" missing");
-								$command_error = true;
-							}
-
-							if(isset($commands->{strtoupper($action)}->PARAM)) {
-								foreach ($commands->{strtoupper($action)}->PARAM as $param => $param_desc) {
-									
-									if(!empty($_REQUEST["$param"])) {
-										LOGDEB("teslaqueries: $param: ".$_REQUEST["$param"]);
-										$command_post += array("$param" => $_REQUEST["$param"]);
-										$command_post_print = $command_post_print.", $param: ".$_REQUEST["$param"];
-										$command_get = $command_get."&$param=".$_REQUEST["$param"];
-									} else {
-										$commandoutput = $commandoutput."Parameter \"$param\" missing! $param_desc\n";
-										LOGINF("Parameter \"$param\" missing");
-										$command_error = true;
-									}
-								}
-							}
-							//echo tesla_query( $vid, $action, $force );
-							if (!$command_error) {
-							$commandoutput =  tesla_query( $vid, $action, $command_post, $force );
-							LOGOK("teslaqueries: vid: $vid, action: $action".$command_post_print.($force ? ", force: $force" : ""));
-							}
-
-						} else {
-							LOGOK("teslaqueries: action: $action".($force ? ", force: $force" : ""));
-							$commandoutput =  tesla_query( $vid, $action, $command_post, $force );
-						}
-					} else {
-						$commandoutput =  "Command not found\n";
-						LOGERR("teslaqueries: Command not found");
-					}
-				}
-			}
-?>
-
 <form method="post" name="main_form" action="?test_query">
     <div class="form-group">
         <table class="formtable" border="0" width="100%">
+		<tr>
+                <td width="25%">
+                    <label id="labeldepth">
+                        <h3>Type</h3>
+                    </label>
+                </td>
+                <td>
+                    <select name="type" onchange="self.location='?type='+this.options[this.selectedIndex].value;">
+                        <option value="General" <?php if($type == "GENERAL"){ echo " selected"; } ?>>
+							General
+						</option>
+
+<?php
+	// foreach vehicle
+	foreach ($vehicles as $vehicle) {
+		if(isset($vehicle->energy_site_id)){
+			$name = $vehicle->site_name;
+			$vid = strval($vehicle->energy_site_id);
+		} else {
+			$name = $vehicle->display_name;
+			$vid = strval($vehicle->id);
+			$state = $vehicle->state;
+		}
+?>
+
+						<option value="<?=$vid;?>" <?php if($type == $vid){ echo " selected"; }?>>
+							<?=$name." (ID ".$vid.")";?>
+						</option>
+
+<?php
+		// foreach vehicle	
+		}
+?>
+
+                    </select>
+                </td>
+                <td width="5%">&nbsp;</td>
+                <td width="20%"></td>
+                <td width="15%">&nbsp;</td>
+            </tr>
             <tr>
                 <td width="25%">
                     <label id="labeldepth">
@@ -136,24 +171,66 @@ if($tokenvalid == "false") {
                     </label>
                 </td>
                 <td>
-                    <select name="action" onchange="self.location='?action='+this.options[this.selectedIndex].value;">
-
+                    <select name="action" onchange="self.location='?type=<?=$type?>&action='+this.options[this.selectedIndex].value;">
+					<option disabled selected>
+							Please select
+					</option>
+					
 <?php
-								foreach ($commands as $command => $attribut) {
+		foreach ($vehicles as $vehicle) {
+			if(isset($vehicle->energy_site_id)){
+				$name = $vehicle->site_name;
+				$vid = strval($vehicle->energy_site_id);
+			} else {
+				$name = $vehicle->display_name;
+				$vid = strval($vehicle->id);
+				$state = $vehicle->state;
+			}
+
+			if ($type == $vid) {
+				foreach ($commands as $command => $attribut) {
+					if ((isset($vehicle->vin) && strpos($attribut->URI, '{vehicle_id}') == true)) {
 ?>
 
-                        <option
-                            value="<?=$command;?>"
-                            <?php if($command == $action){ echo " selected"; } ?>><?=$command;?></option>
+						<option value="<?=$command;?>" <?php if($command == $action){ echo " selected"; } ?>>
+						<?=$command;?>
+						</option>
 
 <?php
-								}
-			?>
-                    </select>
-
-<?php
-								if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false and $commands->{strtoupper($action)}->TYPE == "GET") {
+					} elseif ((isset($vehicle->energy_site_id) && strpos($attribut->URI, '{energy_site_id}') == true)) {
 ?>
+
+						<option value="<?=$command;?>" <?php if($command == $action){ echo " selected"; } ?>>
+						<?=$command;?>
+						</option>
+
+<?php
+					} 
+				}
+			}
+		// foreach vehicle	
+		}
+
+		foreach ($commands as $command => $attribut) {
+			if ($type == "GENERAL" && strpos($attribut->URI, '{energy_site_id}') == false && strpos($attribut->URI, '{vehicle_id}') == false) {
+?>
+
+		<option value="<?=$command;?>" <?php if($command == $action){ echo " selected"; } ?>>
+		<?=$command;?>
+		</option>
+
+<?php
+			}
+		}
+?>
+
+</select>
+<p class="hint">
+	<?=$commands->{"$action"}->DESC;?>
+</p>
+<?php
+		if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') == true and $commands->{strtoupper($action)}->TYPE == "GET") {
+?>				
 
                     <fieldset data-role="controlgroup">
                         <input
@@ -167,7 +244,7 @@ if($tokenvalid == "false") {
                     </fieldset>
 
 <?php
-								}
+		}
 ?>
 
                 </td>
@@ -177,7 +254,7 @@ if($tokenvalid == "false") {
             </tr>
 
 <?php
-								if(isset($commands->{strtoupper($action)}->PARAM)) {
+		if(isset($commands->{strtoupper($action)}->PARAM)) {
 ?>
 
             <tr>
@@ -187,7 +264,7 @@ if($tokenvalid == "false") {
                 <td>
 
 <?php
-									foreach ($commands->{strtoupper($action)}->PARAM as $param => $param_desc) {
+			foreach ($commands->{strtoupper($action)}->PARAM as $param => $param_desc) {
 ?>
 
                     <tr>
@@ -201,57 +278,43 @@ if($tokenvalid == "false") {
                     </tr>
 
 <?php
-									}
-								}
+			}
+		}
 ?>
 
-                </table>
+				</td>
+			</tr>
+        </table>
+    </div>
+</form>
+<hr>
 
-            </div>
-        </form>
-<!-- NEW -->
-	<hr>
-        <h3>Description</h3>
-        <p>
+<!-- Output -->
+	<h2>Output</h2>
 
-<?php
-				if(isset($commands->{"$action"}->DESC)){ echo $commands->{"$action"}->DESC."<br>"; }
+	<?php
+		$com = "?action=".$action.$command_get;
+		if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false) { $com = $com."&vid=$type"; }
+		if(strpos($commands->{strtoupper($action)}->URI, '{energy_site_id}') !== false) { $com = $com."&vid=$type"; }
+		if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false and $force){ $com = $com."&force=true"; }
+		if(isset($commands->{"$action"}->URI)){ echo "TeslaConnect URI: <span class=\"mono\">".strtolower($lbzeurl.$com)."</span><br>"; }
+
+		if(isset($commandoutput)) {
+			if(!$command_error) {
+				if(isset($commands->{"$action"}->URI)){ echo "Tesla API URI: <span class=\"mono\">".BASEURL.$uri."</span><br>"; }
+				if(!empty($command_post)){ echo "Tesla API PARAMETER: <span class=\"mono\">".json_encode($command_post)."</span><br>"; }
 ?>
 
-        </p>
-
-<?php
-			if (isset($commandoutput)){
-?>
-
-<?php
-				if(!$command_error){
-					$com = "?action=".$action.$command_get;
-					if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false) { $com = $com."&vid=$vid"; }
-					if(strpos($commands->{strtoupper($action)}->URI, '{vehicle_id}') !== false and $force){ $com = $com."&force=true"; }
-					if(isset($commands->{"$action"}->URI)){ echo "TeslaConnect URI: <span class=\"mono\">".strtolower($lbzeurl.$com)."</span><br>"; }
-					if(isset($commands->{"$action"}->URI)){ echo "Tesla API URI: <span class=\"mono\">".BASEURL.$uri."</span><br>"; }
-					if(!empty($command_post)){ echo "Tesla API PARAMETER: <span class=\"mono\">".json_encode($command_post)."</span><br>"; }
-?>
-
-        <h3>Output</h3>
-        <hr>
-        <div class="mono">
-            <p><?php echo pretty_print($commandoutput); ?></p>
-        </div>
-
-<?php
-				}
-
-?>
-
-        <hr>
-		
+<hr>
+<div class="mono">
+	<p><?php echo pretty_print($commandoutput);?></p>
+</div>
+<hr>
+	
 <?php
 			}
-		// foreach vehicles
 		}
-	} 
+// if($tokenvalid == "false")
 }
 
 LBWeb::lbfooter();

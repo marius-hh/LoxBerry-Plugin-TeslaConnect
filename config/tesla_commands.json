@@ -268,14 +268,14 @@
     },
     "LIVE_STATUS": {
         "TYPE": "GET",
-        "URI": "api/1/energy_sites/{vehicle_id}/live_status",
+        "URI": "api/1/energy_sites/{energy_site_id}/live_status",
         "AUTH": true,
-        "DESC": "Only for energy products!<br>Retrieves current system information (e.g. solar production, grid export/import, home consumption, etc.)."
+        "DESC": "Retrieves current system information (e.g. solar production, grid export/import, home consumption, etc.)."
     },
     "SITE_INFO": {
         "TYPE": "GET",
-        "URI": "api/1/energy_sites/{vehicle_id}/site_info",
+        "URI": "api/1/energy_sites/{energy_site_id}/site_info",
         "AUTH": true,
-        "DESC": "Only for energy products!<br>Retrieves general system information."
+        "DESC": "Retrieves general system information."
     }
 }

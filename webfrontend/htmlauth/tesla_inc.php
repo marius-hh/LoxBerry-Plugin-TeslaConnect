@@ -185,6 +185,7 @@ function tesla_query( $VID, $COM, $POST=false, $force=false )
 	$type = $commands->{"$COM"}->TYPE;
 	$uri = $commands->{"$COM"}->URI;
 	$uri = str_replace("{vehicle_id}", "$VID", $uri);
+	$uri = str_replace("{energy_site_id}", "$VID", $uri);
 	$timeout = 10;
 
 	LOGINF("Query: $COM: start");

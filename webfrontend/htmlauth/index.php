@@ -1,19 +1,24 @@
 <?php
 // TODO: Create pages
-// [ ] Statuspage
-// [ ] Querypage
-// [ ] Testpage
+// [x] Statuspage
+// [x] Querypage
+// [x] Testpage
 
 require_once "loxberry_system.php";
 require_once "loxberry_web.php";
-require_once "defines.php";
 require_once "tesla_inc.php";
+require_once "defines.php";
 
 $navbar[1]['active'] = True;
 
 // Print LoxBerry header
 $L = LBSystem::readlanguage("language.ini");
 LBWeb::lbheader($template_title, $helplink, $helptemplate);
+
+//Checktoken
+$tokenvalid = tesla_checktoken();
+$tokenparts = explode(".", $login->bearer_token);
+$tokenexpires = json_decode(base64_decode($tokenparts[1]))->exp;
 ?>
 
 <style>
@@ -22,7 +27,6 @@ LBWeb::lbheader($template_title, $helplink, $helptemplate);
         font-size: 110%;
         font-weight: bold;
         color: green;
-
     }
 </style>
 
@@ -30,11 +34,6 @@ LBWeb::lbheader($template_title, $helplink, $helptemplate);
 <div class="wide">Status</div>
 
 <?php
-//Checktoken
-$tokenvalid = tesla_checktoken();
-$tokenparts = explode(".", $login->bearer_token);
-$tokenexpires = json_decode( base64_decode($tokenparts[1]) )->exp;
-
 if($tokenvalid == "true") {
 ?>
 
@@ -68,140 +67,9 @@ if (isset($_GET['delete_token'])) {
 		echo "Login successful. <a href=index.php>Click here to continue</a>.";
         echo "<script> location.href='index.php'; </script>";
 	}
-} else {
-?>
+}
 
-<!-- Queries -->
-<?php
-	$vehicles = tesla_summary();
-
-	if(isset($vehicles)) {
-?>
-
-<div class="wide">Queries</div>
-<p>
-    <i>
-        <span class="mono">&lt;user&gt;:&lt;pass&gt;
-        </span>must be replaced with your
-        <b>LoxBerry's</b>
-        username and password.</i>
-</p>
-<h2>General queries</h2>
-
-<?php
-		foreach ($commands as $command => $attribut) {
-			if($attribut->TYPE == "GET"){
-				// General
-				if (strpos($attribut->URI, '{vehicle_id}') == false) {				
-?>
-
-<div style="display:flex; align-items: center; justify-content: center;">
-    <div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
-        <label for="summarylink">
-            <strong><?=strtolower($command)?></strong><br>
-            <span class="hint"><?= "$attribut->DESC" ?></span></label>
-        <input
-            type="text"
-            id="summarylink"
-            name="summarylink"
-            data-mini="true"
-            value="<?=$lbzeurl."?action=".strtolower($command); ?>"
-            readonly="readonly">
-    </div>
-</div>
-
-<?php
-				}
-			}
-		}
-?>
-
-<hr>
-
-<?php
-		// foreach vehicles
-		foreach ($vehicles as $vehicle) {
-			$name = $vehicle->display_name;
-			$vid = strval($vehicle->id);
-			$state = $vehicle->state;
-			$vehicle_id = "&vid=$vid";
-?>
-
-<h2>Queries for
-    <?=$name . " (VID: " . $vid . ")\n"; ?></h2>
-<h3>Get informations</h3>
-<p>
-    <i>If you add the parameter
-        <span class="mono">&force=true</span>, the vehicle will be woken up if the request is not possible.</i>
-</p>
-
-<?php
-		foreach ($commands as $command => $attribut) {
-
-			if($attribut->TYPE == "GET"){
-				//Vehicle GET
-				if (strpos($attribut->URI, '{vehicle_id}') == true) {
-?>
-
-<div style="display:flex; align-items: center; justify-content: center;">
-    <div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
-        <label for="summarylink">
-            <strong><?=strtolower($command)?></strong><br>
-            <span class="hint"><?= "$attribut->DESC" ?></span></label>
-        <input
-            type="text"
-            id="summarylink"
-            name="summarylink"
-            data-mini="true"
-            value="<?=$lbzeurl."?action=".strtolower($command).$vehicle_id; ?>"
-            readonly="readonly">
-    </div>
-</div>
-
-<?php
-				}
-			}
-		}
-?>
-
-<h3>Send commands</h3>
-
-<?php
-			foreach ($commands as $command => $attribut) {
-				if($attribut->TYPE == "POST"){
-					//Vehicle POST
-					if (strpos($attribut->URI, '{vehicle_id}') == true) {
-						$command_get = "";
-						if(isset($commands->{strtoupper($command)}->PARAM)) {
-							foreach ($commands->{strtoupper($command)}->PARAM as $param => $param_desc) {
-									$command_get = $command_get."&$param=<value>";
-							}
-						}
-
-?>
-
-<div style="display:flex; align-items: center; justify-content: center;">
-    <div style="flex: 0 0 95%;padding:5px" data-role="fieldcontain">
-        <label for="summarylink">
-            <strong><?=strtolower($command)?></strong><br>
-            <span class="hint"><?= "$attribut->DESC" ?></span></label>
-        <input
-            type="text"
-            id="summarylink"
-            name="summarylink"
-            data-mini="true"
-            value="<?=$lbzeurl."?action=".strtolower($command).$vehicle_id.$command_get; ?>"
-            readonly="readonly">
-    </div>
-</div>
-
-<?php
-					}
-				}
-			}
-		// foreach vehicles
-		}
-	} else {
+if($tokenvalid == "false") {
 		$challenge = gen_challenge();
 		$code_verifier = $challenge["code_verifier"];
 		$code_challenge = $challenge["code_challenge"];
@@ -233,7 +101,7 @@ if (isset($_GET['delete_token'])) {
     <strong>Get Token</strong>-Button:<br>
     <input type="text" name="weburl" size="100" required="required"><input type="submit" value="Get Token">
 </form>
-
+<br>
 <script>
     function teslaLogin() {
         teslaLogin = window.open(
@@ -246,7 +114,6 @@ if (isset($_GET['delete_token'])) {
 </script>
 <?php
 	}
-}
 ?>
 
 <!-- MQTT -->

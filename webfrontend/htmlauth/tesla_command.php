@@ -9,8 +9,8 @@ php ./tesla_command.php a=vehicle_data v=123
 /tesla_command.php?a=vehicle_data&v=123
 */
 require_once "loxberry_web.php";
-require_once "defines.php";
 require_once "tesla_inc.php";
+require_once "defines.php";
 
 //
 // Query parameter 
@@ -39,7 +39,8 @@ if(!empty($_REQUEST["vehicle"])) {
 	$vid = $_REQUEST["v"];
 } elseif (!empty($_REQUEST["vid"])) { 
 	$vid = $_REQUEST["vid"];
-}
+} elseif (!empty($_REQUEST["id"])) { 
+	$vid = $_REQUEST["id"];
 
 // Define force
 if(!empty($_REQUEST["force"])) { 
