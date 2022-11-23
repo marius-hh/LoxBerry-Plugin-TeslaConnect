@@ -41,6 +41,7 @@ if(!empty($_REQUEST["vehicle"])) {
 	$vid = $_REQUEST["vid"];
 } elseif (!empty($_REQUEST["id"])) { 
 	$vid = $_REQUEST["id"];
+}
 
 // Define force
 if(!empty($_REQUEST["force"])) { 
