@@ -277,5 +277,23 @@
         "URI": "api/1/energy_sites/{energy_site_id}/site_info",
         "AUTH": true,
         "DESC": "Retrieves general system information."
+    },
+        "SITE_STATUS": {
+        "TYPE": "GET",
+        "URI": "api/1/energy_sites/{energy_site_id}/site_status",
+        "AUTH": true,
+        "DESC": "Retrieves general system information."
+    },
+    "SITE_PROGRAMS": {
+        "TYPE": "GET",
+        "URI": "api/1/energy_sites/{energy_site_id}/programs",
+        "AUTH": true,
+        "DESC": "Retrieves energy site program information."
+    },
+    "SITE_TARIFF_RATE": {
+        "TYPE": "GET",
+        "URI": "api/1/energy_sites/{energy_site_id}/tariff_rate",
+        "AUTH": true,
+        "DESC": "Retrieves the user defined Utility Rate Plan used for Time-Based Control mode. It looks like this endpoint is updated every 30 minutes."
     }
 }
