@@ -109,7 +109,8 @@ if($tokenvalid == "false") {
 
 					} else {
 						LOGOK("teslaqueries: action: $action".($force ? ", force: $force" : ""));
-						$commandoutput = tesla_query( $vid, $action, $command_post, $force );
+						//[x] removed $vid
+						$commandoutput = tesla_query( "", $action, $command_post, $force );
 					}
 				} else {
 					$commandoutput =  "Command not found\n";
