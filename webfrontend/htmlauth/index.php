@@ -57,6 +57,9 @@ if($tokenvalid == "true") {
 if (isset($_GET['delete_token'])) {
 	delete_token();
 	echo "<script> location.href='index.php'; </script>";
+} else if(isset($_POST["setlogintoken"])) {
+    setlogintoken($_POST["access_token"], $_POST["refresh_token"]);
+    echo "<script> location.href='index.php'; </script>";
 } else if(isset($_POST["login"])) {
 	$output = json_decode(login($_POST["weburl"], $_POST["code_verifier"], $_POST["code_challenge"], $_POST["state"]));
 
@@ -77,6 +80,26 @@ if($tokenvalid == "false") {
 		$timestamp = time();
 ?>
 <div class="wide">Login</div>
+
+<p>Enter the Access Token & Refresh Token:<br><br>
+
+You can use the following apps to generate an Access Token & Refresh Token from the Tesla server.
+<li><a href="https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone" target=_blanc>iOS</a></li>
+<li><a href="https://play.google.com/store/apps/details?id=net.leveugle.teslatokens" target=_blanc>Android</a></li></p>
+<form method="post">
+    <input type="hidden" name="setlogintoken" value="">
+    <label for="access_token">Access Token:</label>
+    <textarea id="access_token" name="access_token" required="required"></textarea>
+    <label for="refresh_token">Refresh Token:</label>
+    <textarea id="refresh_token" name="refresh_token" required="required"></textarea>
+    <input type="submit" value="Save Tokens">
+</form>
+<br>
+
+<?php
+/* Disabled, because of login errors
+
+
 <form method="post">
     <input type="hidden" name="login" value="">
     <input type="hidden" name="code_verifier" value="<?php echo $code_verifier; ?>">
@@ -112,6 +135,8 @@ if($tokenvalid == "false") {
         teslaLogin.focus();
     }
 </script>
+*/
+?>
 <?php
 	}
 ?>

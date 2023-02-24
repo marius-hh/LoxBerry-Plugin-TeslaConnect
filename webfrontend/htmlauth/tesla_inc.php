@@ -493,6 +493,24 @@ function delete_token()
 }
 
 
+function setlogintoken($bearer_token, $refresh_token)
+{
+	// Add Tokens to file
+	if(empty($bearer_token)) { return return_msg(0, "Bearer Token issue"); }
+
+	$tokens = json_decode($response["response"], true);
+    $tokens["bearer_token"] = $bearer_token;
+    $tokens["bearer_refresh_token"] = $refresh_token;
+    $return_message = json_encode($tokens);
+
+    // Write data to disk
+    file_put_contents(LOGINFILE, $return_message);    
+
+    // Output
+    return return_msg(1, $return_message);  
+}
+
+
 ####################################################
 # Tesla Authorization fuctions
 # Based on: https://github.com/timdorr/tesla-api/discussions/362
