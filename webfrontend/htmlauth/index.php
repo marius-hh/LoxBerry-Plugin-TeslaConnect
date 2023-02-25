@@ -73,19 +73,23 @@ if (isset($_GET['delete_token'])) {
 }
 
 if($tokenvalid == "false") {
-		$challenge = gen_challenge();
-		$code_verifier = $challenge["code_verifier"];
-		$code_challenge = $challenge["code_challenge"];
-		$state = $challenge["state"];
-		$timestamp = time();
+		// $challenge = gen_challenge();
+		// $code_verifier = $challenge["code_verifier"];
+		// $code_challenge = $challenge["code_challenge"];
+		// $state = $challenge["state"];
+		// $timestamp = time();
 ?>
 <div class="wide">Login</div>
 
 <p>Enter the Access Token & Refresh Token:<br><br>
 
-You can use the following apps to generate an Access Token & Refresh Token from the Tesla server.
-<li><a href="https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone" target=_blanc>iOS</a></li>
-<li><a href="https://play.google.com/store/apps/details?id=net.leveugle.teslatokens" target=_blanc>Android</a></li></p>
+You can use one of the following apps or browser extention to generate an Access Token & Refresh Token from the Tesla server.
+<li><a href="https://chrome.google.com/webstore/detail/tesla-access-token-genera/kokkedfblmfbngojkeaepekpidghjgag" target="_blank">Access Token Generator for Tesla (Chrome Web Store)</a> / <a href="https://github.com/DoctorMcKay/chromium-tesla-token-generator" target="_blank">GitHub</a></li>
+<li><a href="https://microsoftedge.microsoft.com/addons/detail/tesla-access-token-genera/mjpplpkadjdmedpklcioagjgaflfphbo" target="_blank">Access Token Generator for Tesla (Microsoft Edge-Add-ons)</a> / <a href="https://github.com/DoctorMcKay/chromium-tesla-token-generator" target="_blank">GitHub</a></li>
+<li><a href="https://play.google.com/store/apps/details?id=net.leveugle.teslatokens" target="_blank">Tesla Tokens (Android)</a></li>
+<li><a href="https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone" target="_blank">Auth app for Tesla (iOS)</a></li>
+</p>
+
 <form method="post">
     <input type="hidden" name="setlogintoken" value="">
     <label for="access_token">Access Token:</label>
