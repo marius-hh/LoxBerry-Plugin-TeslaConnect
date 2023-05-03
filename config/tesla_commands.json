@@ -31,21 +31,21 @@
     },
     "CHARGE_STATE": {
         "TYPE": "GET",
-        "URI": "api/1/vehicles/{vehicle_id}/data_request/charge_state",
+        "URI": "api/1/vehicles/{vehicle_id}/vehicle_data",
         "AUTH": true,
-        "DESC": "Charge state information including battery limit, charge miles, charge voltage, charge phases, current, charge management, and battery heater status."
+        "DESC": "<b><i>Not supported anymore, replaced to VEHICLE_DATA. The CHARGE_STATE is also delivered there.</i></b> Charge state information including battery limit, charge miles, charge voltage, charge phases, current, charge management, and battery heater status."
     },
     "CLIMATE_STATE": {
         "TYPE": "GET",
-        "URI": "api/1/vehicles/{vehicle_id}/data_request/climate_state",
+        "URI": "api/1/vehicles/{vehicle_id}/vehicle_data",
         "AUTH": true,
-        "DESC": "Climate settings including seats, vents battery, steering wheel, and preconditioning state."
+        "DESC": "<b><i>Not supported anymore, replaced to VEHICLE_DATA. The CLIMATE_STATE is also delivered there.</i></b> Climate settings including seats, vents battery, steering wheel, and preconditioning state."
     },
     "DRIVE_STATE": {
         "TYPE": "GET",
-        "URI": "api/1/vehicles/{vehicle_id}/data_request/drive_state",
+        "URI": "api/1/vehicles/{vehicle_id}/vehicle_data",
         "AUTH": true,
-        "DESC": "Drive state including latitude, longitude, and heading of the vehicle."
+        "DESC": "<b><i>Not supported anymore, replaced to VEHICLE_DATA. The DRIVE_STATE is also delivered there.</i></b> Drive state including latitude, longitude, and heading of the vehicle."
     },
     "WAKE_UP": {
         "TYPE": "POST",
