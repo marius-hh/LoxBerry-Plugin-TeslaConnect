@@ -355,76 +355,119 @@ function pretty_print($json_data)
 }
 
 
-function mqttpublish($data, $mqttsubtopic="")
+function mqttpublish($data, $mqttsubtopic = "")
 {
 	// Function to send data to mqtt
 	// [ ] Bugfix missing 0 values
 	// [ ] Bugfix missing false output
-	
+
 	// MQTT requires a unique client id
-	$client_id = uniqid(gethostname()."_client");
+	$client_id = uniqid(gethostname() . "_client");
 	$creds = mqtt_connectiondetails();
 
 	// Be careful about the required namespace on inctancing new objects:
-	$mqtt = new Bluerhinos\phpMQTT($creds['brokerhost'],  $creds['brokerport'], $client_id);
+	$mqtt = new Bluerhinos\phpMQTT($creds['brokerhost'], $creds['brokerport'], $client_id);
 
-    if( $mqtt->connect(true, NULL, $creds['brokeruser'], $creds['brokerpass'] ) ) {
+	if ($mqtt->connect(true, NULL, $creds['brokeruser'], $creds['brokerpass'])) {
 		LOGDEB("mqttpublish: MQTT connection successful");
 		LOGOK("MQTT: Connection successful.");
 
-		if(is_object($data) or is_array($data)){
+		if (is_object($data) or is_array($data)) {
 			foreach ($data as $key => $value) {
-				if(is_object($value)) {
-					foreach ($value as $skey => $svalue){
-						if(is_object($svalue)) {
-							foreach ($svalue as $sskey => $ssvalue){
-								if(isset($ssvalue)){ 
-									if($sskey == "timestamp") { $ssvalue = epoch2lox(substr($ssvalue, 0, 10)); } //epochetime maxlength
-									if($ssvalue == false) { $ssvalue = 0; }
-									$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
-									LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
+				if (is_object($value)) {
+					foreach ($value as $skey => $svalue) {
+						if (is_object($svalue)) {
+							foreach ($svalue as $sskey => $ssvalue) {
+								if (isset($ssvalue)) {
+									if ($sskey == "timestamp") {
+										$ssvalue = epoch2lox(substr($ssvalue, 0, 10));
+									} //epochetime maxlength
+									if ($ssvalue == false) {
+										$ssvalue = 0;
+									}
+									$mqtt->publish(MQTTTOPIC . "$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
+									LOGDEB("mqttpublish: " . MQTTTOPIC . "$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
 								}
 							}
 						} else {
-							if(is_array($svalue)){
-								$svalue = implode(",", $svalue);
-							}
-							if(isset($svalue)){ 
-								if($skey == "timestamp") { $svalue = epoch2lox(substr($svalue, 0, 10)); } //epochetime maxlength
-								if($svalue == false) { $svalue = 0; }
-								$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key/$skey", $svalue, 0, 1);
-								LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key/$skey: $svalue");
+							if (is_array($svalue)) {
+								if (is_object($svalue[0])) {
+									foreach ($svalue as $sskey => $ssvalue) {
+										if (is_object($ssvalue)) {
+											foreach ($ssvalue as $ssskey => $sssvalue) {
+												$mqtt->publish(MQTTTOPIC . "$mqttsubtopic/$key/$skey/$sskey/$ssskey", $sssvalue, 0, 1);
+												LOGDEB("mqttpublish: " . MQTTTOPIC . "$mqttsubtopic/$key/$skey/$sskey/$ssskey: $sssvalue");
+											}
+										} else {
+
+											if (isset($ssvalue)) {
+												if ($sskey == "timestamp") {
+													$ssvalue = epoch2lox(substr($ssvalue, 0, 10));
+												} //epochetime maxlength
+												if ($ssvalue == false) {
+													$ssvalue = 0;
+												}
+												$mqtt->publish(MQTTTOPIC . "$mqttsubtopic/$key/$skey/$sskey", $ssvalue, 0, 1);
+												LOGDEB("mqttpublish: " . MQTTTOPIC . "$mqttsubtopic/$key/$skey/$sskey: $ssvalue");
+											}
+										}
+									}
+								} else {
+									$svalue = implode(",", $svalue);
+
+									if (isset($svalue)) {
+										if ($skey == "timestamp") {
+											$svalue = epoch2lox(substr($svalue, 0, 10));
+										} //epochetime maxlength
+										if ($svalue == false) {
+											$svalue = 0;
+										}
+										$mqtt->publish(MQTTTOPIC . "$mqttsubtopic/$key/$skey", $svalue, 0, 1);
+										LOGDEB("mqttpublish: " . MQTTTOPIC . "$mqttsubtopic/$key/$skey: $svalue");
+									}
+								}
+							} else {
+								if (isset($svalue)) {
+									if ($skey == "timestamp") {
+										$svalue = epoch2lox(substr($svalue, 0, 10));
+									} //epochetime maxlength
+									if ($svalue == false) {
+										$svalue = 0;
+									}
+									$mqtt->publish(MQTTTOPIC . "$mqttsubtopic/$key/$skey", $svalue, 0, 1);
+									LOGDEB("mqttpublish: " . MQTTTOPIC . "$mqttsubtopic/$key/$skey: $svalue");
+								}
 							}
 						}
 					}
 				} else {
-					if(isset($value)){
-						if(is_array($value)){
+					if (isset($value)) {
+						if (is_array($value)) {
 							$value = implode(",", $value);
 						}
 						$countsubtopics = explode("/", $mqttsubtopic);
 						if ($countsubtopics < 3) {
-							$mqtt->publish(MQTTTOPIC."/summary$mqttsubtopic/$key", $value, 0, 1);
-							LOGDEB("mqttpublish: ".MQTTTOPIC."/summary$mqttsubtopic/$key: $value");
+							$mqtt->publish(MQTTTOPIC . "/summary$mqttsubtopic/$key", $value, 0, 1);
+							LOGDEB("mqttpublish: " . MQTTTOPIC . "/summary$mqttsubtopic/$key: $value");
 						} else {
-							$mqtt->publish(MQTTTOPIC."$mqttsubtopic/$key", $value, 0, 1);
-							LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic/$key: $value");
+							$mqtt->publish(MQTTTOPIC . "$mqttsubtopic/$key", $value, 0, 1);
+							LOGDEB("mqttpublish: " . MQTTTOPIC . "$mqttsubtopic/$key: $value");
 						}
 					}
 				}
 			}
 		} else {
-			$mqtt->publish(MQTTTOPIC."$mqttsubtopic", $data, 0, 1);
-			LOGDEB("mqttpublish: ".MQTTTOPIC."$mqttsubtopic: $data");
+			$mqtt->publish(MQTTTOPIC . "$mqttsubtopic", $data, 0, 1);
+			LOGDEB("mqttpublish: " . MQTTTOPIC . "$mqttsubtopic: $data");
 		}
 		//[x] Query timestamp added, changed to mqtt_timestamp
-		$mqtt->publish(MQTTTOPIC."/mqtt_timestamp", epoch2lox(time()), 0, 1);
-		LOGDEB("mqttpublish: ".MQTTTOPIC."/mqtt_timestamp: ".epoch2lox(time()));
-        $mqtt->close();
-    } else {
+		$mqtt->publish(MQTTTOPIC . "/mqtt_timestamp", epoch2lox(time()), 0, 1);
+		LOGDEB("mqttpublish: " . MQTTTOPIC . "/mqtt_timestamp: " . epoch2lox(time()));
+		$mqtt->close();
+	} else {
 		LOGDEB("mqttpublish: MQTT connection failed");
 		LOGERR("MQTT: Connection failed.");
-    }
+	}
 }
 
 
